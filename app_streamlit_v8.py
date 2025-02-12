@@ -6,9 +6,9 @@ import streamlit as st
 from openai import OpenAI  # Updated API usage
 from dotenv import load_dotenv
 
-from evaluate_session import evaluate_counseling_session
+from evaluate_session import evaluate_counselling_session
 
-st.set_page_config(page_title="Counselor Training Chatbot", layout="wide") # Set page title and layout
+st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide") # Set page title and layout
 
 # Load environment variables
 load_dotenv()
@@ -52,7 +52,7 @@ def load_personas():
 
 def build_system_message(persona, scenario=None):
     base_prompt = f"""
-    You are a simulated client in a counseling session.
+    You are a simulated client in a counselling session.
     Your name is {persona['name']}, you are {persona['age']} years old, 
     and you work as a {persona['occupation']}.
     Your main issue: {persona['main_issue']}.
@@ -111,7 +111,7 @@ def get_ai_response(user_input):
 
 def main():
     """Streamlit UI function."""
-    st.title("Counselor Training Chatbot")
+    st.title("Counsellor Training Chatbot")
 
     # Load personas
     all_personas = load_personas()
@@ -163,7 +163,7 @@ def main():
 
     # TAB 2: Chat Session
     with tab_chat:
-        st.subheader("Counseling Session")
+        st.subheader("Counselling Session")
 
         # Display conversation history
         for msg in st.session_state.conversation_history:
@@ -193,7 +193,7 @@ def main():
         else:
             if st.button("Evaluate Session"):
                 with st.spinner("Evaluating session..."):
-                    evaluation_feedback = evaluate_counseling_session(API_KEY, st.session_state.conversation_history)
+                    evaluation_feedback = evaluate_counselling_session(API_KEY, st.session_state.conversation_history)
                     st.session_state.evaluation = evaluation_feedback  # Store evaluation in session state
                 st.success("Evaluation Complete!")
                 st.markdown("### Supervisor Feedback")
@@ -213,8 +213,9 @@ def main():
             st.download_button(
                 label="Download Full Session Transcript (with Evaluation)",
                 data=transcript_text,
-                file_name="counseling_session_with_evaluation.txt"
+                file_name="counselling_session_with_evaluation.txt"
             )
 
 if __name__ == "__main__":
     main()
+
