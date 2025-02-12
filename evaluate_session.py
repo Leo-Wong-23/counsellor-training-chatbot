@@ -2,9 +2,9 @@
 
 from openai import OpenAI  # Ensure you use the latest OpenAI client
 
-def evaluate_counseling_session(api_key, conversation_history):
+def evaluate_counselling_session(api_key, conversation_history):
     """
-    Evaluates a counseling session transcript using an OpenAI LLM call.
+    Evaluates a counselling session transcript using an OpenAI LLM call.
     
     Arguments:
     - api_key: The OpenAI API key
@@ -18,9 +18,9 @@ def evaluate_counseling_session(api_key, conversation_history):
 
     # Define the system prompt for evaluation
     system_prompt = """
-    You are a clinical supervisor providing feedback on a counseling session transcript
+    You are a clinical supervisor providing feedback on a counselling session transcript
     between a trainee (user) and a simulated client (assistant).
-    Assess the trainee's counseling techniques based on:
+    Assess the trainee's counselling techniques based on:
     1. Empathy
     2. Communication Clarity
     3. Active Listening
@@ -41,7 +41,7 @@ def evaluate_counseling_session(api_key, conversation_history):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": system_prompt},
+            {"role": "developer", "content": system_prompt},
             {"role": "user", "content": transcript_text}
         ],
         max_tokens=300,
