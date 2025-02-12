@@ -27,7 +27,7 @@ def evaluate_counseling_session(api_key, conversation_history):
     4. Appropriateness of Responses
     5. Overall Effectiveness
 
-    Provide a concise analysis, highlight strengths and weaknesses, 
+    Provide a concise analysis, with specific conversation details as examples when appropriate, highlight strengths and weaknesses, 
     and suggest 2-3 actionable improvements for the trainee.
     """.strip()
 
