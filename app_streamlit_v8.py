@@ -3,7 +3,7 @@ import json
 import streamlit as st
 from openai import OpenAI
 from dotenv import load_dotenv
-from evaluate_session_v2 import evaluate_counselling_session
+from evaluate_session import evaluate_counselling_session
 from datetime import datetime
 
 st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
