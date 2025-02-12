@@ -39,7 +39,7 @@ def evaluate_counseling_session(api_key, conversation_history):
 
     # Updated OpenAI API call
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": transcript_text}
