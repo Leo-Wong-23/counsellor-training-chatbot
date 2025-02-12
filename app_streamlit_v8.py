@@ -12,32 +12,36 @@ st.set_page_config(page_title="Counselor Training Chatbot", layout="wide") # Set
 
 # Load environment variables
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
+API_KEY = os.getenv("OPENAI_API_KEY")
+PASSWORD = os.getenv("PASSWORD")
 
 # Initialize OpenAI client
-client = OpenAI(api_key=api_key)
+client = OpenAI(api_key=API_KEY)
 
-# Password protection
-PASSWORD = "qwer7890uiop"  # Change this to your own secure password
-
+#Password protection
 def check_password():
-    """Simple password authentication."""
+    """Simple password authentication with both a submit button and Enter key support."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
 
     if not st.session_state.authenticated:
         st.sidebar.header("Secure Login")
-        entered_password = st.sidebar.text_input("Enter Password:", type="password")
 
-        if entered_password:  # Only check after user enters something
+        # Create a password input field with a submit button
+        with st.sidebar.form(key="password_form"):
+            entered_password = st.text_input("Enter Password:", type="password")
+            submit_button = st.form_submit_button("Submit")
+
+        # Validate the password when the user presses Enter or clicks Submit
+        if submit_button or entered_password:  # Allow both button and Enter key
             if entered_password == PASSWORD:
                 st.session_state.authenticated = True
-                st.rerun()  # Refresh the app to hide the login UI
-            else:
+                st.rerun()  # Refresh to hide the login UI
+            elif entered_password:
                 st.sidebar.error("Incorrect password. Try again.")
 
     if not st.session_state.authenticated:
-        st.stop()  # Prevents rest of app from running until authenticated
+        st.stop()  # Prevents the rest of the app from loading
 
 check_password()  # Enforce login before loading the app
 
@@ -189,7 +193,7 @@ def main():
         else:
             if st.button("Evaluate Session"):
                 with st.spinner("Evaluating session..."):
-                    evaluation_feedback = evaluate_counseling_session(api_key, st.session_state.conversation_history)
+                    evaluation_feedback = evaluate_counseling_session(API_KEY, st.session_state.conversation_history)
                     st.session_state.evaluation = evaluation_feedback  # Store evaluation in session state
                 st.success("Evaluation Complete!")
                 st.markdown("### Supervisor Feedback")
@@ -214,4 +218,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
