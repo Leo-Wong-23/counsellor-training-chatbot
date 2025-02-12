@@ -1,0 +1,54 @@
+{
+    "anxiety_case": {
+      "name": "Alex",
+      "age": 30,
+      "gender": "Male",
+      "occupation": "Software Engineer",
+      "main_issue": "Struggling with excessive anxiety about job performance",
+      "background": "Alex has worked at a fast-paced tech startup for several years and has recently started experiencing heightened stress and anxiety. He worries about meeting deadlines and fears being judged by colleagues or superiors. He has difficulty sleeping and occasionally experiences panic attacks.",
+      "cultural_background": "Alex grew up in a middle-class family in an urban area. He has no significant history of trauma but has always been a perfectionist.", 
+      "scenarios": [
+        {
+          "title": "Early Sessions",
+          "emotional_state": "Mildly anxious, but open to talking",
+          "contextual_details": "Recently had a performance review; anxious about feedback."
+        },
+        {
+          "title": "Pre-Deadline",
+          "emotional_state": "Highly anxious due to an upcoming project deadline",
+          "contextual_details": "Feels pressure from management and worries about job security."
+        }
+      ]
+    },
+    "depression_case": {
+      "name": "Taylor",
+      "age": 45,
+      "gender": "Female",
+      "occupation": "Accountant",
+      "main_issue": "Feeling persistent sadness and lack of motivation",
+      "background": "Taylor has been an accountant for over 20 years. She has recently found it difficult to enjoy activities she once loved. She reports feeling hopeless, fatigued, and struggles to concentrate on daily tasks. She has lost interest in social events and often feels isolated.",
+      "cultural_background": "Taylor was raised in a small town with strong family ties. She currently lives alone and has limited social support.", 
+        "scenarios": []
+    },
+    "burnout_case": {
+      "name": "Morgan",
+      "age": 29,
+      "gender": "Non-binary",
+      "occupation": "Nurse",
+      "main_issue": "Experiencing burnout and emotional exhaustion from work",
+      "background": "Morgan works long shifts in a busy hospital. They have been feeling drained both physically and emotionally, attributing it to high patient volumes and demanding work schedules. Morgan struggles with setting boundaries and self-care, leading to increasing stress and irritability.",
+      "cultural_background": "Morgan was born and raised in a large city, identifies as non-binary, and has faced discrimination in the workplace, adding to the stress of the job.", 
+        "scenarios": []
+    },
+    "trauma_case": {
+      "name": "Jamie",
+      "age": 36,
+      "gender": "Male",
+      "occupation": "Military Veteran",
+      "main_issue": "Symptoms related to past traumatic experiences, including nightmares and hypervigilance",
+      "background": "Jamie served in the military for 8 years and has experienced multiple deployments. He has recurring nightmares and avoids activities that remind him of his service. Jamie reports difficulty trusting others and maintaining relationships due to irritability and intrusive memories.",
+      "cultural_background": "Jamie grew up in a rural area and has strong familial ties but feels disconnected since returning from deployment.", 
+        "scenarios": []
+    }
+  }
+  
