@@ -1,14 +1,12 @@
-# app_streamlit_v8.py
-
 import os
 import json
 import streamlit as st
-from openai import OpenAI  # Updated API usage
+from openai import OpenAI
 from dotenv import load_dotenv
+from evaluate_session_v2 import evaluate_counselling_session
+from datetime import datetime
 
-from evaluate_session import evaluate_counselling_session
-
-st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide") # Set page title and layout
+st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
 
 # Load environment variables
 load_dotenv()
@@ -18,26 +16,24 @@ PASSWORD = os.getenv("PASSWORD")
 # Initialize OpenAI client
 client = OpenAI(api_key=API_KEY)
 
-#Password protection
+# Password protection
 def check_password():
-    """Simple password authentication with both a submit button and Enter key support."""
+    """Simple password authentication."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
 
     if not st.session_state.authenticated:
         st.sidebar.header("Secure Login")
 
-        # Create a password input field with a submit button
         with st.sidebar.form(key="password_form"):
             entered_password = st.text_input("Enter Password:", type="password")
             submit_button = st.form_submit_button("Submit")
 
-        # Validate the password when the user presses Enter or clicks Submit
-        if submit_button or entered_password:  # Allow both button and Enter key
+        if submit_button or entered_password:
             if entered_password == PASSWORD:
                 st.session_state.authenticated = True
-                st.rerun()  # Refresh to hide the login UI
-            elif entered_password:
+                st.rerun()
+            else:
                 st.sidebar.error("Incorrect password. Try again.")
 
     if not st.session_state.authenticated:
@@ -101,7 +97,7 @@ def get_ai_response(user_input):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages,
-        max_tokens=300,
+        max_tokens=2000,
         temperature=0.7
     )
 
@@ -109,8 +105,8 @@ def get_ai_response(user_input):
     st.session_state.conversation_history.append({"role": "assistant", "content": ai_message})
     return ai_message
 
+# UI function
 def main():
-    """Streamlit UI function."""
     st.title("Counsellor Training Chatbot")
 
     # Load personas
@@ -126,7 +122,7 @@ def main():
     scenario_list = selected_persona.get("scenarios", [])
     scenario_titles = [s["title"] for s in scenario_list]
     selected_scenario = {}
-    
+
     if scenario_titles:
         scenario_title = st.sidebar.selectbox("Select a Scenario:", scenario_titles)
         selected_scenario = next((s for s in scenario_list if s["title"] == scenario_title), {})
@@ -140,6 +136,7 @@ def main():
         st.session_state.scenario = selected_scenario
         st.session_state.conversation_history = []
         st.session_state.evaluation = None  # Reset evaluation when switching personas
+        st.session_state.supervisor_history = []  # Reset supervisor chat
 
     # Tabs for Persona Info, Chat, and Evaluation
     tab_persona, tab_chat, tab_eval = st.tabs(["Persona Info", "Chat Session", "Evaluation"])
@@ -167,10 +164,8 @@ def main():
 
         # Display conversation history
         for msg in st.session_state.conversation_history:
-            if msg["role"] == "assistant":
-                st.markdown(f"**{selected_persona['name']} (Client):** {msg['content']}")
-            elif msg["role"] == "user":
-                st.markdown(f"**You (Trainee):** {msg['content']}")
+            role = "Client" if msg["role"] == "assistant" else "Trainee"
+            st.markdown(f"**{role}:** {msg['content']}")
 
         # Chat input box
         user_input = st.chat_input("Type your message here...")
@@ -182,6 +177,7 @@ def main():
         if st.button("Clear Conversation"):
             st.session_state.conversation_history = []
             st.session_state.evaluation = None  # Reset evaluation if clearing chat
+            st.session_state.supervisor_history = []  # Reset supervisor chat
             st.rerun()
 
     # TAB 3: Evaluation
@@ -191,31 +187,52 @@ def main():
         if not st.session_state.conversation_history:
             st.info("No conversation to evaluate yet. Please have a chat session first.")
         else:
-            if st.button("Evaluate Session"):
-                with st.spinner("Evaluating session..."):
-                    evaluation_feedback = evaluate_counselling_session(API_KEY, st.session_state.conversation_history)
-                    st.session_state.evaluation = evaluation_feedback  # Store evaluation in session state
-                st.success("Evaluation Complete!")
-                st.markdown("### Supervisor Feedback")
-                st.write(st.session_state.evaluation)
+            # Evaluate session button
+            if not st.session_state.get("evaluation"):
+                if st.button("Evaluate Session"):
+                    with st.spinner("Evaluating session..."):
+                        evaluation_feedback = evaluate_counselling_session(API_KEY, st.session_state.conversation_history)
+                        st.session_state.evaluation = evaluation_feedback
+                        st.session_state.supervisor_history.append({"role": "assistant", "content": evaluation_feedback})
+                    st.success("Evaluation Complete!")
 
-            # Prepare transcript including evaluation
+            # Display evaluation feedback
+            if st.session_state.evaluation:
+                for msg in st.session_state.supervisor_history:
+                    role = "Supervisor" if msg["role"] == "assistant" else "Trainee"
+                    st.markdown(f"**{role}:** {msg['content']}")
+
+                # Chat input box for supervisor
+                supervisor_input = st.chat_input("Ask the supervisor a question about the evaluation...")
+                if supervisor_input:
+                    supervisor_response = evaluate_counselling_session(API_KEY, st.session_state.supervisor_history + [{"role": "user", "content": supervisor_input}])
+                    st.session_state.supervisor_history.append({"role": "user", "content": supervisor_input})
+                    st.session_state.supervisor_history.append({"role": "assistant", "content": supervisor_response})
+                    st.rerun()
+
+            # Prepare transcript including evaluation and supervisor conversation
             transcript_text = "\n".join([
                 f"{'Client' if msg['role'] == 'assistant' else 'Trainee'}: {msg['content']}"
                 for msg in st.session_state.conversation_history
             ])
 
-            # Append evaluation (if available)
-            if st.session_state.evaluation:
-                transcript_text += "\n\n---\n\n### Evaluation Feedback\n" + st.session_state.evaluation
+            # Append supervisor conversation
+            if st.session_state.supervisor_history:
+                transcript_text += "\n\n---\n\n### Evaluation Feedback\n"
+                transcript_text += "\n".join([
+                    f"{'Supervisor' if msg['role'] == 'assistant' else 'Trainee'}: {msg['content']}"
+                    for msg in st.session_state.supervisor_history
+                ])
 
-            # Download button for transcript with evaluation
+            # Download button for transcript with dynamic filename
+            current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_name = f"counselling_session_{current_time}.txt"
+
             st.download_button(
-                label="Download Full Session Transcript (with Evaluation)",
+                label="Download Full Session Transcript (with Evaluation & Supervisor Conversation)",
                 data=transcript_text,
-                file_name="counselling_session_with_evaluation.txt"
+                file_name=file_name
             )
 
 if __name__ == "__main__":
     main()
-
