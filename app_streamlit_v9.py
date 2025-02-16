@@ -23,9 +23,25 @@ def check_password():
         st.session_state.authenticated = False
 
     if not st.session_state.authenticated:
-        st.sidebar.header("Secure Login")
+        # App description
+        st.title("Counsellor Training Chatbot")
+        st.markdown("""
+        Hi, this is Leo, welcome to this Counsellor Training Chatbot I built!
 
-        with st.sidebar.form(key="password_form"):
+        This is a proof-of-concept application to explore the possibilities of how AI can improve practices in the field of psychology.
+
+        This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.
+
+        Key Features:
+
+        - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges.
+
+        - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding.
+
+        Please enter the password to begin.
+        """)
+
+        with st.form(key="password_form"):
             entered_password = st.text_input("Enter Password:", type="password")
             submit_button = st.form_submit_button("Submit")
 
@@ -34,7 +50,7 @@ def check_password():
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.sidebar.error("Incorrect password. Try again.")
+                st.error("Incorrect password. Try again.")
 
     if not st.session_state.authenticated:
         st.stop()  # Prevents the rest of the app from loading
