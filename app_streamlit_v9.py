@@ -26,14 +26,15 @@ def check_password():
         # App description
         st.title("Counsellor Training Chatbot")
         st.markdown("""
-        Hi, this is Leo, welcome to this Counsellor Training Chatbot I built!
+        Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education.
+        
+        Welcome to this Counsellor Training Chatbot that I built!
 
-        This is a proof-of-concept application to explore the possibilities of how AI can improve practices in the field of psychology.
+        This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology.
 
         This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.
 
         Key Features:
-
         - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges.
 
         - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding.
