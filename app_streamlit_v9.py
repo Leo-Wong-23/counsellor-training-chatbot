@@ -39,6 +39,11 @@ def check_password():
 
         - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding.
 
+        Safety & Privacy Statement:
+        This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. No chat history, personal data, or session transcripts are stored beyond the active session.
+        
+        That said, a download transcript option is available in the evaluation tab. If you'd like to share feedback or discuss potential improvements, feel free to reach out!
+
         Please enter the password to begin.
         """)
 
