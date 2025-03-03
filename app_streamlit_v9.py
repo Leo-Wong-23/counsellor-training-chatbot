@@ -26,27 +26,34 @@ def check_password():
         # App description
         st.title("Counsellor Training Chatbot")
         st.markdown("""
-        Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education.
+        **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education.**
         
         Welcome to this Counsellor Training Chatbot that I built!
 
         This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology.
 
-        This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.
+        This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
 
-        Key Features:
+
+        **Key Features:**
         - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges (Chat Session tab).
 
-        - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (Evaluation tab).
+        - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (Evaluation tab).<br><br>
 
-        Safety & Privacy Statement:
+
+        **Features in Development:**
+        - Traceback input modification, which will be so useful from a training perspective!
+        - User voice input and dynamic model voice output, like a sending and receiving voice messages!<br><br>
+
+
+        ***Safety & Privacy Statement:***
         This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. 
         No chat history or personal data are stored beyond the active session, they will be erased once you close or refresh the page.
         
-        That said, a download transcript option is available in the evaluation tab. If you'd like to share feedback or discuss potential improvements, feel free to reach out!
+        That said, a download transcript option is available in the evaluation tab. If you'd like to share feedback or discuss potential improvements, feel free to reach out!<br><br>
 
         Please enter the password to begin.
-        """)
+        """, unsafe_allow_html=True)
 
         with st.form(key="password_form"):
             entered_password = st.text_input("Enter Password:", type="password")
