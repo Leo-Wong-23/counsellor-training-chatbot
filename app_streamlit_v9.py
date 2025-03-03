@@ -32,9 +32,9 @@ def check_password():
 
 
         **Key Features:**
-        - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges (Chat Session tab).
+        - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges (in the Chat Session tab).
 
-        - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (Evaluation tab).<br><br>
+        - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (in the Evaluation tab).<br><br>
 
 
         **Features in Development:**
