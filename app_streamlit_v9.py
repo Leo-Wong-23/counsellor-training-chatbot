@@ -26,13 +26,9 @@ def check_password():
         # App description
         st.title("Counsellor Training Chatbot")
         st.markdown("""
-        **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education.**
-        
-        Welcome to this Counsellor Training Chatbot that I built!
+        **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
 
-        This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology.
-
-        This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
+        This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology. This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
 
 
         **Key Features:**
@@ -54,7 +50,7 @@ def check_password():
 
         Please enter the password to begin.
         """, unsafe_allow_html=True)
-
+        
         with st.form(key="password_form"):
             entered_password = st.text_input("Enter Password:", type="password")
             submit_button = st.form_submit_button("Submit")
