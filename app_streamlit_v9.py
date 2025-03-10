@@ -44,7 +44,7 @@ def check_password():
 
         ***Safety & Privacy Statement:***
         This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. 
-        No chat history or personal data are stored beyond the active session, they will be erased once you close or refresh the page.
+        No chat history or personal data are stored beyond the active session, they are erased once you close or refresh the page.
         
         That said, a download transcript option is available in the evaluation tab. If you'd like to share feedback or discuss potential improvements, feel free to reach out!<br><br>
 
