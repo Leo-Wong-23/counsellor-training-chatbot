@@ -48,7 +48,7 @@ def check_password():
         
         That said, a download transcript option is available in the evaluation tab. If you'd like to share feedback or discuss potential improvements, feel free to reach out!<br><br>
 
-        Please enter the password to begin.
+        Please enter the password to begin (you can find it in my CV).
         """, unsafe_allow_html=True)
         
         with st.form(key="password_form"):
