@@ -136,10 +136,10 @@ def main():
     # Initialize evaluation-related keys if they don't exist yet.
     if "evaluation_feedback" not in st.session_state:
         st.session_state.evaluation_feedback = None
-    if "supervisor_conversation" not in st.session_state:
-        st.session_state.supervisor_conversation = []
-    if "loading_supervisor_response" not in st.session_state:
-        st.session_state.loading_supervisor_response = False
+    if "evaluation_assistant_conversation" not in st.session_state:
+        st.session_state.evaluation_assistant_conversation = []
+    if "loading_evaluation_assistant_response" not in st.session_state:
+        st.session_state.loading_evaluation_assistant_response = False
 
     st.title("Counsellor Training Chatbot")
 
@@ -170,10 +170,10 @@ def main():
         st.session_state.scenario = selected_scenario
         st.session_state.conversation_history = []
         st.session_state.evaluation_feedback = None  # Reset evaluation feedback when switching personas
-        st.session_state.supervisor_conversation = []  # Reset supervisor conversation
+        st.session_state.evaluation_assistant_conversation = []  # Reset evaluation assistant conversation
 
     # Tabs for Persona Info, Chat, and Evaluation
-    tab_persona, tab_chat, tab_eval = st.tabs(["Persona Info", "Chat Session", "Evaluation"])
+    tab_persona, tab_chat, tab_eval = st.tabs(["Persona Info", "Counselling Session", "Session Evaluation"])
 
     # TAB 1: Persona Information
     with tab_persona:
@@ -194,12 +194,30 @@ def main():
 
     # TAB 2: Chat Session
     with tab_chat:
-        st.subheader("Counselling Session")
-
         # Display conversation history
         for msg in st.session_state.conversation_history:
-            role = "Client" if msg["role"] == "assistant" else "Trainee"
-            st.markdown(f"**{role}:** {msg['content']}")
+            role = f"Client ({st.session_state.persona['name']})" if msg["role"] == "assistant" else "Trainee (You)"
+
+            # Appearance settings
+            if role == "Trainee (You)":
+                align = "flex-end"
+                bubble_color = "#0e2a47"  # Dark blue for user (trainee)
+                text_color = "white"
+            else:
+                align = "flex-start"
+                bubble_color = "#1b222a"  # Dark gray for simulated client
+                text_color = "white"
+
+            st.markdown(f"""
+                <div style='display: flex; justify-content: {align}; margin: 8px 0;'>
+                    <div style='background-color: {bubble_color}; color: {text_color}; 
+                                padding: 12px 16px; border-radius: 18px; 
+                                max-width: 75%; box-shadow: 1px 1px 6px rgba(0,0,0,0.2); 
+                                font-size: 16px; line-height: 1.5;'>
+                        <strong>{role}:</strong><br>{msg['content']}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
         # Chat input box
         user_input = st.chat_input("Type your message here...")
@@ -211,13 +229,11 @@ def main():
         if st.button("Clear Conversation"):
             st.session_state.conversation_history = []
             st.session_state.evaluation = None  # Reset evaluation if clearing chat
-            st.session_state.supervision_history = []  # Reset supervisor chat
+            st.session_state.supervision_history = []  # Reset evaluation assistant chat
             st.rerun()
 
         # TAB 3: Evaluation
         with tab_eval:
-            st.subheader("Session Evaluation")
-
             if not st.session_state.conversation_history:
                 st.info("No conversation to evaluate yet. Please have a chat session first.")
             else:
@@ -227,56 +243,72 @@ def main():
                         with st.spinner("Evaluating session..."):
                             evaluation_feedback = evaluate_counselling_session(API_KEY, st.session_state.conversation_history)
                             st.session_state.evaluation_feedback = evaluation_feedback  # Save evaluation feedback
-                            st.session_state.supervisor_conversation = []  # Initialize supervisor conversation
+                            st.session_state.evaluation_assistant_conversation = []  # Initialize evaluation assistant conversation
                         st.success("Evaluation Complete!")
                 
                 # Only proceed if evaluation is complete.
                 if st.session_state.evaluation_feedback is not None:
                     # 1) Render the static evaluation text (this remains visible in white)
-                    st.markdown(f"**Supervisor (Initial Evaluation):** {st.session_state.evaluation_feedback}")
+                    st.markdown(f"{st.session_state.evaluation_feedback}")
                     
-                    # 2) Render the follow-up supervisor conversation (Q&A) in a separate container.
+                    # 2) Render the follow-up evaluation assistant conversation (Q&A) with custom styling.
                     conversation_placeholder = st.empty()
-                    conversation_text = ""
-                    for msg in st.session_state.supervisor_conversation:
-                        role = "Supervisor" if msg["role"] == "assistant" else "Trainee"
-                        conversation_text += f"**{role}:** {msg['content']}\n\n"
-                    conversation_placeholder.markdown(conversation_text)
+                    conversation_html = ""
+                    for msg in st.session_state.evaluation_assistant_conversation:
+                        if msg["role"] == "assistant":
+                            # Evaluation assistant's responses remain as plain markdown (left aligned)
+                            conversation_html += f"<div style='text-align: left; margin: 8px 0;'>"
+                            conversation_html += f"<strong>Evaluation Assistant:</strong><br>{msg['content']}"
+                            conversation_html += "</div>"
+                        else:
+                            # Trainee's inputs rendered as right-aligned speech bubbles
+                            conversation_html += f"""
+                            <div style='display: flex; justify-content: flex-end; margin: 8px 0;'>
+                                <div style='background-color: #0e2a47; color: white;
+                                            padding: 12px 16px; border-radius: 18px;
+                                            max-width: 75%; box-shadow: 1px 1px 6px rgba(0,0,0,0.2);
+                                            font-size: 16px; line-height: 1.5;'>
+                                    <strong>Trainee (You):</strong><br>{msg['content']}
+                                </div>
+                            </div>
+                            """
+                    # Render the custom HTML (ensure unsafe_allow_html=True)
+                    conversation_placeholder.markdown(conversation_html, unsafe_allow_html=True)
                     
-                    # 3) Supervisor input box for asking questions about the evaluation.
-                    supervisor_input = st.chat_input("Ask the supervisor a question about the evaluation...")
-                    if supervisor_input:
-                        # Show a spinner while the new supervisor response is generated.
-                        with st.spinner("Supervisor is thinking..."):
+                    # 3) Evaluation assistant input box for asking questions about the evaluation.
+                    evaluation_assistant_input = st.chat_input("Ask the evaluation assistant a question about the evaluation...")
+                    if evaluation_assistant_input:
+                        # Show a spinner while the new evaluation assistant response is generated.
+                        with st.spinner("Evaluation assistant is thinking..."):
                             # Build context with the static evaluation (for context) and existing Q&A plus the new question.
                             context = (
                                 [{"role": "assistant", "content": st.session_state.evaluation_feedback}]
-                                + st.session_state.supervisor_conversation
-                                + [{"role": "user", "content": supervisor_input}]
+                                + st.session_state.evaluation_assistant_conversation
+                                + [{"role": "user", "content": evaluation_assistant_input}]
                             )
-                            supervisor_response = evaluate_counselling_session(API_KEY, context)
+                            evaluation_assistant_response = evaluate_counselling_session(API_KEY, context)
                             
                         # Append the new interaction to the conversation.
-                        st.session_state.supervisor_conversation.append({"role": "user", "content": supervisor_input})
-                        st.session_state.supervisor_conversation.append({"role": "assistant", "content": supervisor_response})
+                        st.session_state.evaluation_assistant_conversation.append({"role": "user", "content": evaluation_assistant_input})
+                        st.session_state.evaluation_assistant_conversation.append({"role": "assistant", "content": evaluation_assistant_response})
                         st.rerun()
                 
-                # (Optional) Prepare transcript for download.
+                # Prepare transcript for download.
                 transcript_text = "\n".join([
                     f"{'Client' if msg['role'] == 'assistant' else 'Trainee'}: {msg['content']}"
                     for msg in st.session_state.conversation_history
                 ])
                 if st.session_state.evaluation_feedback is not None:
                     transcript_text += "\n\n---\n\n### Evaluation Feedback\n"
-                    transcript_text += f"Supervisor (Initial Evaluation): {st.session_state.evaluation_feedback}\n"
-                    for msg in st.session_state.supervisor_conversation:
-                        role = "Supervisor" if msg["role"] == "assistant" else "Trainee"
+                    transcript_text += f"Evaluation Assistant (Initial Evaluation): {st.session_state.evaluation_feedback}\n"
+                    for msg in st.session_state.evaluation_assistant_conversation:
+                        role = "Evaluation Assistant" if msg["role"] == "assistant" else "Trainee"
                         transcript_text += f"{role}: {msg['content']}\n"
 
                 current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_name = f"counselling_session_{current_time}.txt"
                 st.download_button(
-                    label="Download Full Session Transcript (with Evaluation & Supervisor Conversation)",
+                    label="Download Full Session Transcript (with Evaluation & Evaluation Assistant Conversation)",
                     data=transcript_text,
                     file_name=file_name
                 )
