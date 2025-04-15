@@ -109,7 +109,6 @@ def get_ai_response(user_input):
     Handles user input, updates session history, calls OpenAI API, 
     and returns the AI's response.
     """
-    st.session_state.conversation_history.append({"role": "user", "content": user_input})
 
     # Build new system message every time in case scenario changes mid-session (unlikely, but possible)
     system_message = build_system_message(
@@ -140,6 +139,12 @@ def main():
         st.session_state.evaluation_assistant_conversation = []
     if "loading_evaluation_assistant_response" not in st.session_state:
         st.session_state.loading_evaluation_assistant_response = False
+    if "pending_evaluation_question" not in st.session_state:
+        st.session_state.pending_evaluation_question = None
+
+    # Initialize conversation history if it doesn't exist yet.
+    if "pending_user_input" not in st.session_state:
+        st.session_state.pending_user_input = None
 
     st.title("Counsellor Training Chatbot")
 
@@ -194,6 +199,7 @@ def main():
 
     # TAB 2: Chat Session
     with tab_chat:
+
         # Display conversation history
         for msg in st.session_state.conversation_history:
             role = f"Client ({st.session_state.persona['name']})" if msg["role"] == "assistant" else "Trainee (You)"
@@ -219,10 +225,19 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
 
+        # Check if there's a new message that hasn't received a response yet
+        if st.session_state.pending_user_input:
+            with st.spinner("Client is responding..."):
+                get_ai_response(st.session_state.pending_user_input)
+            st.session_state.pending_user_input = None
+            st.rerun()
+
         # Chat input box
         user_input = st.chat_input("Type your message here...")
         if user_input:
-            get_ai_response(user_input)
+            # Append the user message right now, so it's shown in UI immediately
+            st.session_state.conversation_history.append({"role": "user", "content": user_input})
+            st.session_state.pending_user_input = user_input
             st.rerun()
 
         # Clear conversation button
@@ -276,22 +291,30 @@ def main():
                     conversation_placeholder.markdown(conversation_html, unsafe_allow_html=True)
                     
                     # 3) Evaluation assistant input box for asking questions about the evaluation.
-                    evaluation_assistant_input = st.chat_input("Ask the evaluation assistant a question about the evaluation...")
-                    if evaluation_assistant_input:
-                        # Show a spinner while the new evaluation assistant response is generated.
+                    # Check if a response is being generated
+                    if st.session_state.loading_evaluation_assistant_response:
                         with st.spinner("Evaluation assistant is thinking..."):
-                            # Build context with the static evaluation (for context) and existing Q&A plus the new question.
                             context = (
                                 [{"role": "assistant", "content": st.session_state.evaluation_feedback}]
                                 + st.session_state.evaluation_assistant_conversation
-                                + [{"role": "user", "content": evaluation_assistant_input}]
+                                + [{"role": "user", "content": st.session_state.pending_evaluation_question}]
                             )
                             evaluation_assistant_response = evaluate_counselling_session(API_KEY, context)
-                            
-                        # Append the new interaction to the conversation.
-                        st.session_state.evaluation_assistant_conversation.append({"role": "user", "content": evaluation_assistant_input})
-                        st.session_state.evaluation_assistant_conversation.append({"role": "assistant", "content": evaluation_assistant_response})
-                        st.rerun()
+
+                            st.session_state.evaluation_assistant_conversation.append({"role": "user", "content": st.session_state.pending_evaluation_question})
+                            st.session_state.evaluation_assistant_conversation.append({"role": "assistant", "content": evaluation_assistant_response})
+
+                            st.session_state.loading_evaluation_assistant_response = False
+                            st.session_state.pending_evaluation_question = None
+                            st.rerun()
+
+                    # Only show input when not loading
+                    elif not st.session_state.loading_evaluation_assistant_response:
+                        new_question = st.chat_input("Ask the evaluation assistant a question about the evaluation...")
+                        if new_question:
+                            st.session_state.pending_evaluation_question = new_question
+                            st.session_state.loading_evaluation_assistant_response = True
+                            st.rerun()
                 
                 # Prepare transcript for download.
                 transcript_text = "\n".join([
