@@ -139,8 +139,6 @@ def main():
         st.session_state.evaluation_assistant_conversation = []
     if "loading_evaluation_assistant_response" not in st.session_state:
         st.session_state.loading_evaluation_assistant_response = False
-    if "pending_evaluation_question" not in st.session_state:
-        st.session_state.pending_evaluation_question = None
 
     # Initialize conversation history if it doesn't exist yet.
     if "pending_user_input" not in st.session_state:
@@ -152,7 +150,7 @@ def main():
     all_personas = load_personas()
     persona_keys = list(all_personas.keys())
 
-    # Sidebar for persona selection
+    # Sidebar for persona selection and additional actions
     st.sidebar.header("Session Setup")
     selected_persona_key = st.sidebar.selectbox("Select a Persona:", persona_keys, index=0)
     selected_persona = all_personas[selected_persona_key]
@@ -161,10 +159,16 @@ def main():
     scenario_list = selected_persona.get("scenarios", [])
     scenario_titles = [s["title"] for s in scenario_list]
     selected_scenario = {}
-
     if scenario_titles:
         scenario_title = st.sidebar.selectbox("Select a Scenario:", scenario_titles)
         selected_scenario = next((s for s in scenario_list if s["title"] == scenario_title), {})
+
+    # Clear conversation button in the sidebar
+    if st.sidebar.button("Clear Conversation"):
+        st.session_state.conversation_history = []
+        st.session_state.evaluation_feedback = None  # Reset the evaluation feedback
+        st.session_state.evaluation_assistant_conversation = []  # Reset the evaluation assistant Q&A
+        st.rerun()
 
     # Reset session state when persona/scenario changes
     if ("persona" not in st.session_state or 
@@ -240,13 +244,6 @@ def main():
             st.session_state.pending_user_input = user_input
             st.rerun()
 
-        # Clear conversation button
-        if st.button("Clear Conversation"):
-            st.session_state.conversation_history = []
-            st.session_state.evaluation = None  # Reset evaluation if clearing chat
-            st.session_state.supervision_history = []  # Reset evaluation assistant chat
-            st.rerun()
-
         # TAB 3: Evaluation
         with tab_eval:
             if not st.session_state.conversation_history:
@@ -291,30 +288,22 @@ def main():
                     conversation_placeholder.markdown(conversation_html, unsafe_allow_html=True)
                     
                     # 3) Evaluation assistant input box for asking questions about the evaluation.
-                    # Check if a response is being generated
-                    if st.session_state.loading_evaluation_assistant_response:
+                    evaluation_assistant_input = st.chat_input("Ask the evaluation assistant a question about the evaluation...")
+                    if evaluation_assistant_input:
+                        # Show a spinner while the new evaluation assistant response is generated.
                         with st.spinner("Evaluation assistant is thinking..."):
+                            # Build context with the static evaluation (for context) and existing Q&A plus the new question.
                             context = (
                                 [{"role": "assistant", "content": st.session_state.evaluation_feedback}]
                                 + st.session_state.evaluation_assistant_conversation
-                                + [{"role": "user", "content": st.session_state.pending_evaluation_question}]
+                                + [{"role": "user", "content": evaluation_assistant_input}]
                             )
                             evaluation_assistant_response = evaluate_counselling_session(API_KEY, context)
-
-                            st.session_state.evaluation_assistant_conversation.append({"role": "user", "content": st.session_state.pending_evaluation_question})
-                            st.session_state.evaluation_assistant_conversation.append({"role": "assistant", "content": evaluation_assistant_response})
-
-                            st.session_state.loading_evaluation_assistant_response = False
-                            st.session_state.pending_evaluation_question = None
-                            st.rerun()
-
-                    # Only show input when not loading
-                    elif not st.session_state.loading_evaluation_assistant_response:
-                        new_question = st.chat_input("Ask the evaluation assistant a question about the evaluation...")
-                        if new_question:
-                            st.session_state.pending_evaluation_question = new_question
-                            st.session_state.loading_evaluation_assistant_response = True
-                            st.rerun()
+                            
+                        # Append the new interaction to the conversation.
+                        st.session_state.evaluation_assistant_conversation.append({"role": "user", "content": evaluation_assistant_input})
+                        st.session_state.evaluation_assistant_conversation.append({"role": "assistant", "content": evaluation_assistant_response})
+                        st.rerun()
                 
                 # Prepare transcript for download.
                 transcript_text = "\n".join([
