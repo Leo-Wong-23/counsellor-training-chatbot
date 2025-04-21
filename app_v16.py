@@ -14,9 +14,28 @@ from openai import OpenAI
 from evaluate_session_v2 import evaluate_counselling_session
 
 # -----------------------------------------------------------------------------
-# 0.  Low‑level conversation tree classes
+# 0.  Low‑level config – Streamlit page & password gate
 # -----------------------------------------------------------------------------
+st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
 
+load_dotenv()
+API_KEY = os.getenv("OPENAI_API_KEY")
+PASSWORD = os.getenv("PASSWORD")
+client = OpenAI(api_key=API_KEY)
+
+if PASSWORD:  # optional simple password gate for demos
+    if "authenticated" not in st.session_state:
+        pw = st.text_input("Password", type="password")
+        if pw == PASSWORD:
+            st.session_state.authenticated = True
+            st.experimental_rerun()
+        st.stop()
+    elif not st.session_state.authenticated:
+        st.stop()
+
+# -----------------------------------------------------------------------------
+# 1.  Helper dataclasses & branching‑conversation tree
+# -----------------------------------------------------------------------------
 @dataclass
 class MsgNode:
     id: str
@@ -27,484 +46,283 @@ class MsgNode:
 
 
 class ConvTree:
-    """Tree of MsgNode objects with helpers for conversation branching and traversal."""
+    """Tree structure + helpers for trace‑back modification & branch navigation."""
 
     def __init__(self):
         root_id = "root"
         self.nodes: Dict[str, MsgNode] = {
-            root_id: MsgNode(id=root_id, role="system", content="ROOT", parent_id=None)
+            root_id: MsgNode(
+                id=root_id,
+                role="system",
+                content="Root of conversation tree",
+                parent_id=None,
+            )
         }
         self.children: Dict[str, List[str]] = {root_id: []}
         self.current_leaf_id: str = root_id
 
-    # ------------------------------------------------------------------
-    # CRUD helpers
-    # ------------------------------------------------------------------
+    # ---------- CRUD ----------
     def add_node(self, parent_id: str, role: str, content: str) -> str:
-        node_id = str(uuid.uuid4())
-        node = MsgNode(id=node_id, role=role, content=content, parent_id=parent_id)
-        self.nodes[node_id] = node
-        self.children.setdefault(node_id, [])
-        self.children.setdefault(parent_id, []).append(node_id)
-        return node_id
+        nid = str(uuid.uuid4())
+        node = MsgNode(id=nid, role=role, content=content, parent_id=parent_id)
+        self.nodes[nid] = node
+        self.children.setdefault(nid, [])
+        self.children.setdefault(parent_id, []).append(nid)
+        return nid
 
-    # ------------------------------------------------------------------
-    # conversation branch & navigation helpers
-    # ------------------------------------------------------------------
+    # ---------- Traversal ----------
     def path_to_leaf(self, leaf_id: Optional[str] = None) -> List[MsgNode]:
-        """Return the node path from root to *leaf_id* (defaults to current leaf)."""
-        if leaf_id is None:
-            leaf_id = self.current_leaf_id
-        path: List[MsgNode] = []
-        cursor = leaf_id
-        while cursor is not None:
-            path.append(self.nodes[cursor])
-            cursor = self.nodes[cursor].parent_id
-        return list(reversed(path))  # root ➜ leaf
+        leaf_id = leaf_id or self.current_leaf_id
+        path = []
+        while leaf_id:
+            path.append(self.nodes[leaf_id])
+            leaf_id = self.nodes[leaf_id].parent_id
+        return list(reversed(path))
+
+    def children_of(self, node_id: str) -> List[str]:
+        return self.children.get(node_id, [])
 
     def siblings(self, node_id: str) -> List[str]:
-        parent_id = self.nodes[node_id].parent_id
-        if parent_id is None:
-            return []
-        return self.children[parent_id]
+        p = self.nodes[node_id].parent_id
+        return self.children.get(p, []) if p else []
 
     def sibling_index(self, node_id: str) -> int:
         sibs = self.siblings(node_id)
         return sibs.index(node_id) if node_id in sibs else -1
 
     def deepest_descendant(self, node_id: str) -> str:
-        """Return the deepest descendant by always following the *first* child."""
         cursor = node_id
         while self.children.get(cursor):
             cursor = self.children[cursor][0]
         return cursor
 
     def select_sibling(self, node_id: str, direction: int) -> None:
-        """Move *current_leaf_id* to the equivalent position on a sibling conversation branch."""
         sibs = self.siblings(node_id)
         if len(sibs) <= 1:
-            return  # nothing to do
-        idx = (self.sibling_index(node_id) + direction) % len(sibs)
-        new_id = sibs[idx]
-        # descend to the deepest leaf on that conversation branch
+            return
+        idx = self.sibling_index(node_id)
+        new_id = sibs[(idx + direction) % len(sibs)]
         self.current_leaf_id = self.deepest_descendant(new_id)
 
-    # ------------------------------------------------------------------
-    # Serialization helpers (for download transcript)
-    # ------------------------------------------------------------------
-    def to_dict(self) -> Dict:
-        return {
-            "nodes": {nid: node.__dict__ for nid, node in self.nodes.items()},
-            "children": self.children,
-            "current_leaf_id": self.current_leaf_id,
-        }
-
-    # ------------------------------------------------------------------
-    # Legacy migration (flat list ➜ linear tree)
-    # ------------------------------------------------------------------
-    @classmethod
-    def from_flat_history(cls, history: List[Dict[str, str]]) -> "ConvTree":
-        tree = cls()
-        parent = "root"
-        for msg in history:
-            parent = tree.add_node(parent, msg["role"], msg["content"])
-        tree.current_leaf_id = parent
-        return tree
-
-
 # -----------------------------------------------------------------------------
-# 1.  Environment & OpenAI client
+# 2.  Persona & prompt helpers
 # -----------------------------------------------------------------------------
-
-load_dotenv()
-API_KEY = os.getenv("OPENAI_API_KEY")
-PASSWORD = os.getenv("PASSWORD")
-client = OpenAI(api_key=API_KEY)
-
-# -----------------------------------------------------------------------------
-# 2.  Utility functions (personas, system message, prompt)
-# -----------------------------------------------------------------------------
-
-def load_personas():
-    with open("personas_v2.json", "r") as f:
+def load_personas() -> List[Dict]:
+    with open("personas_v2.json") as f:
         return json.load(f)
 
 
-def build_system_message(persona, scenario=None):
-    base_prompt = f"""
-    You are a simulated client in a counselling session.
-    Your name is {persona['name']}, you are {persona['age']} years old, and you work as a {persona['occupation']}.
-    Your main issue: {persona['main_issue']}.
-    Background: {persona['background']}.
-    Cultural background: {persona['cultural_background']}.
-    """.strip()
-
-    if scenario:
-        base_prompt += f"\n\nCurrent emotional state: {scenario.get('emotional_state', 'Not specified')}."
-        base_prompt += f"\nAdditional context: {scenario.get('contextual_details', 'No extra details provided')}."
-
-    base_prompt += """
-    - You should express emotions in a natural way, sometimes hesitating or showing self-doubt.
-    - Occasionally shift emotional tone based on the trainee's response (e.g., if they show empathy, express some relief before returning to anxiety).
-    - If relevant, bring up additional concerns beyond the main issue (e.g., social anxiety at work, overworking, physical symptoms of stress).
-    - Avoid being overly structured or sounding like an AI—make your responses sound more like real human speech.
-    """.strip()
-
-    return base_prompt
+def load_scenarios() -> Dict[str, List[Dict]]:
+    with open("scenarios_v2.json") as f:
+        return json.load(f)
 
 
-def build_prompt(conv_tree: ConvTree, system_msg: str) -> List[Dict[str, str]]:
-    msgs = [
-        {"role": "developer", "content": system_msg},
-    ]
-    for node in conv_tree.path_to_leaf()[1:]:  # skip root
-        if node.role in {"user", "assistant"}:
-            msgs.append({"role": node.role, "content": node.content})
-    return msgs
-
+personas = load_personas()
+scenarios = load_scenarios()
 
 # -----------------------------------------------------------------------------
-# 3.  OpenAI call wrapper
+# 3.  Streamlit side‑bars (persona, scenario, settings)
 # -----------------------------------------------------------------------------
+with st.sidebar:
+    st.markdown("## Select a Persona & Scenario")
+    persona_names = [p["name"] for p in personas]
+    persona_idx = st.selectbox("Persona", range(len(personas)), format_func=lambda i: persona_names[i])
+    sel_persona = personas[persona_idx]
 
-def get_ai_response(conv_tree: ConvTree, pending_user_node_id: str, persona, scenario):
-    """Generate assistant reply for the path ending at *pending_user_node_id*."""
-    system_msg = build_system_message(persona, scenario)
-    conv_tree.current_leaf_id = pending_user_node_id  # set leaf before building prompt
-    messages = build_prompt(conv_tree, system_msg)
+    scenario_titles = [s["title"] for s in scenarios[sel_persona["name"]]]
+    scenario_idx = st.selectbox("Scenario", range(len(scenario_titles)), format_func=lambda i: scenario_titles[i])
+    sel_scenario = scenarios[sel_persona["name"]][scenario_idx]
 
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=messages,
-        max_tokens=2000,
-        temperature=0.7,
-    )
-    ai_content = response.choices[0].message.content
-    return ai_content
-
+    # New session button
+    if st.button("🔄  Start New Session"):
+        st.session_state.clear()
+        st.experimental_rerun()
 
 # -----------------------------------------------------------------------------
-# 4.  Streamlit UI
+# 4.  Session‑level state initialisation
 # -----------------------------------------------------------------------------
-
-st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
-
-# ------------------ 4.1  Password gate ------------------
-
-def check_password():
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
-
-    if not st.session_state.authenticated:
-        st.title("Counsellor Training Chatbot")
-        st.markdown(
-            """
-            **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
-
-            This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology. This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
-
-
-            **Key Features:**
-            - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges (in the Chat Session tab).
-
-            - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (in the Evaluation tab).<br><br>
-
-
-            **Features in Development:**
-            - Traceback input modification, which will be quite useful from a training perspective, allowing exploration of how the session could have gone differently
-            - User voice input and dynamic model voice output, like a sending and receiving voice messages<br><br>
-
-
-            ***Safety & Privacy Statement:***
-            This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. 
-            No chat history or personal data are stored beyond the active session, they are erased once you close or refresh the page.
-            
-            That said, a download transcript option is available in the evaluation tab. If you'd like to share feedback or discuss potential improvements, feel free to reach out!<br><br>
-
-            Please enter the password to begin (you can find it in my CV).
-            """,
-            unsafe_allow_html=True,
-        )
-
-        with st.form(key="password_form"):
-            entered = st.text_input("Enter Password:", type="password")
-            if st.form_submit_button("Submit"):
-                if entered == PASSWORD:
-                    st.session_state.authenticated = True
-                    st.rerun()
-                else:
-                    st.error("Incorrect password. Try again.")
-
-    if not st.session_state.authenticated:
-        st.stop()
-
-
-check_password()
-
-# ------------------ 4.2  Session‑state bootstrapping ------------------
-
 if "conv_tree" not in st.session_state:
     st.session_state.conv_tree = ConvTree()
-
-# legacy migration support (in case a previous flat history exists)
-if "conversation_history" in st.session_state and st.session_state.conversation_history:
-    st.session_state.conv_tree = ConvTree.from_flat_history(
-        st.session_state.conversation_history
-    )
-    del st.session_state.conversation_history
-
-conv_tree: ConvTree = st.session_state.conv_tree  # typed alias
-
-if "editing_msg_id" not in st.session_state:
-    st.session_state.editing_msg_id = None
-if "editing_content" not in st.session_state:
-    st.session_state.editing_content = ""
 if "pending_user_node_id" not in st.session_state:
     st.session_state.pending_user_node_id = None
+if "evaluation_feedback" not in st.session_state:
+    st.session_state.evaluation_feedback: Dict[str, str] = {}
+if "evaluation_assistant_conversation" not in st.session_state:
+    # maps leaf‑id → list[messages]
+    st.session_state.evaluation_assistant_conversation: Dict[str, List[Dict]] = {}
 
-# ------------------ 4.3  Sidebar (persona & scenario) ------------------
+conv_tree: ConvTree = st.session_state.conv_tree  # type: ignore
 
-all_personas = load_personas()
-persona_keys = list(all_personas.keys())
+# -----------------------------------------------------------------------------
+# 4.1  Display intro (only first render)
+# -----------------------------------------------------------------------------
+if st.session_state.get("show_intro", True):
+    st.markdown(
+        """
+        **Hi, welcome to this Counsellor Training Chatbot!**
 
-st.sidebar.header("Session Setup")
-sel_persona_key = st.sidebar.selectbox("Select a Persona:", persona_keys, index=0)
-sel_persona = all_personas[sel_persona_key]
+        *Interact with the simulated client in the **“Counselling Session”** tab, then
+        request a **Session Evaluation** and ask follow‑up questions in the **“Session Evaluation”** tab.*  
+        """,
+        unsafe_allow_html=True,
+    )
+    st.session_state.show_intro = False
+    st.stop()
 
-scenario_list = sel_persona.get("scenarios", [])
-scenario_titles = [s["title"] for s in scenario_list]
-sel_scenario = {}
-if scenario_titles:
-    sel_title = st.sidebar.selectbox("Select a Scenario:", scenario_titles)
-    sel_scenario = next(s for s in scenario_list if s["title"] == sel_title)
+# -----------------------------------------------------------------------------
+# 4.2  Helper for AI completion
+# -----------------------------------------------------------------------------
+def build_system_prompt(persona: Dict, scenario: Dict) -> str:
+    base = f"""You are **{persona['name']}**, {persona['age']}‑year‑old {persona['occupation']}"""
+    if scenario:
+        base += f". Current concern: **{scenario['title']}** – {scenario.get('contextual_details', '')}"
+    return base
 
-if st.sidebar.button("Clear Conversation & Evaluation"):
-    st.session_state.conv_tree = ConvTree()
-    st.session_state.editing_msg_id = None
-    st.session_state.editing_content = ""
-    st.session_state.pending_user_node_id = None
-    st.rerun()
 
-# ------------------ 4.4  Tabs ------------------
+def get_ai_response(tree: ConvTree, user_node_id: str, persona: Dict, scenario: Dict) -> str:
+    prompt = [{"role": "system", "content": build_system_prompt(persona, scenario)}]
+    for n in tree.path_to_leaf(user_node_id)[1:]:
+        prompt.append({"role": n.role, "content": n.content})
+    chat = client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt, temperature=0.7)
+    return chat.choices[0].message.content.strip()
 
-tab_persona, tab_chat, tab_eval = st.tabs([
-    "Persona Info",
-    "Counselling Session",
-    "Session Evaluation",
-])
 
-# --------------- TAB 1: Persona Info ---------------
+# -----------------------------------------------------------------------------
+# 4.3  Little renderer for nodes
+# -----------------------------------------------------------------------------
+def render_msg(node: MsgNode):
+    if node.role == "system":
+        return
+    with st.chat_message("assistant" if node.role == "assistant" else "user"):
+        st.markdown(node.content)
+
+
+# -----------------------------------------------------------------------------
+# 4.4  Tabs
+# -----------------------------------------------------------------------------
+tab_persona, tab_chat, tab_eval = st.tabs(
+    ["Persona Info", "Counselling Session", "Session Evaluation"]
+)
+
+# ---------- TAB 1 : Persona Info ----------
 with tab_persona:
     st.subheader("Persona Details")
     for k in ["name", "age", "gender", "occupation", "main_issue", "background", "cultural_background"]:
         st.markdown(f"**{k.replace('_', ' ').title()}:** {sel_persona[k]}")
-    if sel_scenario:
-        st.write("---")
-        st.markdown(f"**Scenario: {sel_scenario['title']}**")
-        st.markdown(f"- **Emotional State:** {sel_scenario.get('emotional_state', '')}")
-        st.markdown(f"- **Context:** {sel_scenario.get('contextual_details', '')}")
+    st.write("---")
+    st.markdown(f"**Scenario: {sel_scenario['title']}**")
+    st.markdown(f"- **Emotional State:** {sel_scenario.get('emotional_state','')}")
+    st.markdown(f"- **Context:** {sel_scenario.get('contextual_details','')}")
 
-# --------------- Helper: render one message bubble ---------------
-
-def render_msg(node: MsgNode):
-    role_label = (
-        f"Client ({sel_persona['name']})" if node.role == "assistant" else "Trainee (You)"
-    )
-    # For user messages, align bubble to the right; for assistant, to the left.
-    align = "flex-end" if node.role == "user" else "flex-start"
-    bubble_color = "#0e2a47" if node.role == "user" else "#1b222a"
-    text_color = "white"
-
-    if node.role == "user":
-        # If there are sibling messages, use a columns layout for the navigation arrows.
-        sibs = conv_tree.siblings(node.id)
-        if len(sibs) > 1:
-            col_left, col_center, col_right, col_main = st.columns([1, 1, 1, 10])
-
-            with col_left:
-                # Center the "◀" button vertically.
-                st.markdown(
-                    """<div style="display:flex; align-items:center; height:100%;">""",
-                    unsafe_allow_html=True
-                )
-                if st.button("◀", key=f"left_{node.id}"):
-                    conv_tree.select_sibling(node.id, -1)
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
-
-            with col_center:
-                # Center the "2/2" (or "idx/total") text vertically.
-                current_idx = conv_tree.sibling_index(node.id) + 1
-                total_sibs = len(conv_tree.siblings(node.id))
-                st.markdown(
-                    f"""
-                    <div style="display:flex; align-items:center; height:100%;">
-                        {current_idx}/{total_sibs}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            with col_right:
-                # Center the "▶" button vertically.
-                st.markdown(
-                    """<div style="display:flex; align-items:center; height:100%;">""",
-                    unsafe_allow_html=True
-                )
-                if st.button("▶", key=f"right_{node.id}"):
-                    conv_tree.select_sibling(node.id, +1)
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            # If no arrows are needed, use a full‐width container
-            col_main = st.container()
-
-        # When editing, show the text area (which will span full width below the message).
-        if st.session_state.editing_msg_id == node.id:
-            new_text = st.text_area(
-                "Edit your message:",
-                value=st.session_state.editing_content or node.content,
-                key=f"textarea_{node.id}",
-            )
-            col_send, col_cancel = st.columns(2)
-            with col_send:
-                if st.button("Send", key=f"send_edit_{node.id}"):
-                    parent_id = node.parent_id  # type: ignore
-                    new_user_id = conv_tree.add_node(parent_id, "user", new_text)
-                    with st.spinner("Client is responding..."):
-                        ai_reply = get_ai_response(conv_tree, new_user_id, sel_persona, sel_scenario)
-                    new_assist_id = conv_tree.add_node(new_user_id, "assistant", ai_reply)
-                    conv_tree.current_leaf_id = new_assist_id
-                    st.session_state.editing_msg_id = None
-                    st.session_state.editing_content = ""
-                    st.rerun()
-            with col_cancel:
-                if st.button("Cancel", key=f"cancel_edit_{node.id}"):
-                    st.session_state.editing_msg_id = None
-                    st.session_state.editing_content = ""
-                    st.rerun()
-        with col_main:
-            # Two columns: one for the Edit button (centered), one for the bubble.
-            col_edit, col_bubble = st.columns([1, 9])
-            with col_edit:
-                st.markdown(
-                    """<div style="display:flex; align-items:center; height:100%;">""",
-                    unsafe_allow_html=True
-                )
-                if st.button("✎ Edit", key=f"edit_{node.id}"):
-                    st.session_state.editing_msg_id = node.id
-                    st.session_state.editing_content = node.content
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
-            with col_bubble:
-                st.markdown(
-                    f"""
-                    <div style='display: flex; justify-content: {align}; margin: 8px 0;'>
-                        <div style='background-color: {bubble_color}; color: {text_color}; 
-                                    padding: 12px 16px; border-radius: 18px; 
-                                    max-width: 75%; box-shadow: 1px 1px 6px rgba(0,0,0,0.2); 
-                                    font-size: 16px; line-height: 1.5;'>
-                            <strong>{role_label}:</strong><br>{node.content}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-    else:
-        # For assistant messages, just render the bubble in a full-width container.
-        st.markdown(
-            f"""
-            <div style='display: flex; justify-content: {align}; margin: 8px 0;'>
-                <div style='background-color: {bubble_color}; color: {text_color}; 
-                            padding: 12px 16px; border-radius: 18px; 
-                            max-width: 75%; box-shadow: 1px 1px 6px rgba(0,0,0,0.2); 
-                            font-size: 16px; line-height: 1.5;'>
-                    <strong>{role_label}:</strong><br>{node.content}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-# --------------- TAB 2: Chat Session ---------------
+# ---------- TAB 2 : Counselling Session ----------
 with tab_chat:
-    # Render current conversation branch
-    for node in conv_tree.path_to_leaf()[1:]:  # skip root
-        render_msg(node)
+    for n in conv_tree.path_to_leaf()[1:]:
+        render_msg(n)
 
-    # -------------- Handle pending AI response --------------
+    # Handle pending AI reply
     if st.session_state.pending_user_node_id:
-        with st.spinner("Client is responding..."):
-            ai_reply = get_ai_response(
-                conv_tree,
-                st.session_state.pending_user_node_id,
-                sel_persona,
-                sel_scenario,
-            )
-        new_assist_id = conv_tree.add_node(
-            st.session_state.pending_user_node_id, "assistant", ai_reply
-        )
-        conv_tree.current_leaf_id = new_assist_id
+        with st.spinner("Client is responding…"):
+            reply = get_ai_response(conv_tree, st.session_state.pending_user_node_id, sel_persona, sel_scenario)
+        new_id = conv_tree.add_node(conv_tree.current_leaf_id, "assistant", reply)
+        conv_tree.current_leaf_id = new_id
         st.session_state.pending_user_node_id = None
-        st.rerun()
+        st.experimental_rerun()
 
-    # -------------- Chat input --------------
-    user_text = st.chat_input("Type your message here…")
-    if user_text:
-        # Append user node under current leaf
-        new_user_id = conv_tree.add_node(conv_tree.current_leaf_id, "user", user_text)
-        conv_tree.current_leaf_id = new_user_id
-        st.session_state.pending_user_node_id = new_user_id
-        st.rerun()
+    # Chat input
+    user_txt = st.chat_input("Type your message here…")
+    if user_txt:
+        uid = conv_tree.add_node(conv_tree.current_leaf_id, "user", user_txt)
+        conv_tree.current_leaf_id = uid
+        st.session_state.pending_user_node_id = uid
+        st.experimental_rerun()
 
-# --------------- TAB 3: Evaluation ---------------
+# ---------- TAB 3 : Session Evaluation ----------
 with tab_eval:
-    branch = conv_tree.path_to_leaf()[1:]  # skip root
+    branch = conv_tree.path_to_leaf()[1:]  # skip system root
+
     if not branch:
         st.info("No conversation to evaluate yet. Have a chat first.")
     else:
-        if "evaluation_feedback" not in st.session_state:
-            st.session_state.evaluation_feedback = {}
-        branch_key = conv_tree.current_leaf_id  # use leaf id as cache key
-
+        # --- Ensure required per‑branch dictionaries exist ---
+        branch_key = conv_tree.current_leaf_id
         if branch_key not in st.session_state.evaluation_feedback:
+            st.session_state.evaluation_feedback[branch_key] = None
+        if branch_key not in st.session_state.evaluation_assistant_conversation:
+            st.session_state.evaluation_assistant_conversation[branch_key] = []
+
+        # ----------------------------------------------------
+        # 3‑A  ‑‑ Evaluate (or show existing evaluation)
+        # ----------------------------------------------------
+        if st.session_state.evaluation_feedback[branch_key] is None:
             if st.button("Evaluate Session"):
                 with st.spinner("Evaluating session…"):
-                    flat_history = [
-                        {"role": n.role, "content": n.content} for n in branch if n.role != "system"
-                    ]
-                    feedback = evaluate_counselling_session(API_KEY, flat_history)
-                    st.session_state.evaluation_feedback[branch_key] = feedback
+                    flat = [{"role": n.role, "content": n.content} for n in branch if n.role != "system"]
+                    fb = evaluate_counselling_session(API_KEY, flat)
+                    st.session_state.evaluation_feedback[branch_key] = fb
                 st.success("Evaluation complete!")
-                st.rerun()
+                st.experimental_rerun()
         else:
-            st.markdown(st.session_state.evaluation_feedback[branch_key])
+            feedback = st.session_state.evaluation_feedback[branch_key]
+            st.markdown(feedback)
+
+            # ------------------------------------------------
+            # 3‑B  ‑‑ Evaluation‑Assistant Q & A
+            # ------------------------------------------------
+            conv = st.session_state.evaluation_assistant_conversation[branch_key]
+            for m in conv:
+                with st.chat_message("assistant" if m["role"] == "assistant" else "user"):
+                    st.markdown(m["content"])
+
+            q = st.chat_input("Ask the Evaluation Assistant about your session…", key=f"eval_input_{branch_key}_{len(conv)}")
+            if q:
+                with st.spinner("Evaluation Assistant is thinking…"):
+                    context = (
+                        [{"role": "assistant", "content": feedback}] + conv + [{"role": "user", "content": q}]
+                    )
+                    ans = evaluate_counselling_session(API_KEY, context)
+                conv.extend(
+                    [
+                        {"role": "user", "content": q},
+                        {"role": "assistant", "content": ans},
+                    ]
+                )
+                st.experimental_rerun()
+
+            # ------------------------------------------------
+            # 3‑C  ‑‑ Re‑evaluate (clears assistant convo)
+            # ------------------------------------------------
             if st.button("Re‑evaluate current conversation branch"):
-                del st.session_state.evaluation_feedback[branch_key]
-                st.rerun()
+                st.session_state.evaluation_feedback.pop(branch_key, None)
+                st.session_state.evaluation_assistant_conversation.pop(branch_key, None)
+                st.experimental_rerun()
 
-    # -------------- Transcript download --------------
-    def build_transcript(nodes: List[MsgNode]):
-        lines = []
-        for n in nodes:
-            if n.role == "assistant":
-                lines.append(f"Client: {n.content}")
-            elif n.role == "user":
-                lines.append(f"Trainee: {n.content}")
-        return "\n".join(lines)
+        # ----------------------------------------------------
+        # 3‑D  ‑‑ Transcript (incl. evaluation & Q & A)
+        # ----------------------------------------------------
+        def build_transcript(nodes: List[MsgNode]) -> str:
+            txt = []
+            for n in nodes:
+                prefix = "Client" if n.role == "assistant" else "Trainee"
+                txt.append(f"{prefix}: {n.content}")
+            return "\n".join(txt)
 
-    transcript_text = build_transcript(branch)
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    st.download_button(
-        label="Download current conversation branch transcript",
-        data=transcript_text,
-        file_name=f"counselling_session_{ts}.txt",
-    )
+        transcript = build_transcript(branch)
+        if st.session_state.evaluation_feedback.get(branch_key):
+            transcript += "\n\n--- Session Evaluation ---\n"
+            transcript += st.session_state.evaluation_feedback[branch_key] + "\n"
+            for m in st.session_state.evaluation_assistant_conversation.get(branch_key, []):
+                role = "Evaluation Assistant" if m["role"] == "assistant" else "Trainee"
+                transcript += f"{role}: {m['content']}\n"
 
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        st.download_button(
+            label="Download full session transcript (with Evaluation)",
+            data=transcript,
+            file_name=f"counselling_session_{ts}.txt",
+        )
 
 # -----------------------------------------------------------------------------
-# 5.  __main__ guard (not strictly necessary for Streamlit but kept for clarity)
+# 5.  __main__ guard
 # -----------------------------------------------------------------------------
-
 if __name__ == "__main__":
     pass
