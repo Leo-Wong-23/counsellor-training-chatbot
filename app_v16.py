@@ -326,8 +326,18 @@ def render_msg(node: MsgNode):
             value=st.session_state.editing_content or node.content,
             key=f"textarea_{node.id}",
         )
-        send_col, cancel_col = st.columns(2)
-        with send_col:
+
+        col_l, col_cancel, col_send, col_r = st.columns([6,1,1,6], gap="small")
+
+        with col_cancel:
+            # Cancel on the left
+            if st.button("Cancel", key=f"cancel_edit_{node.id}"):
+                st.session_state.editing_msg_id = None
+                st.session_state.editing_content = ""
+                st.rerun()
+
+        with col_send:
+            # Send on the right
             if st.button("Send", key=f"send_edit_{node.id}"):
                 parent = node.parent_id  # type: ignore
                 new_user_id = conv_tree.add_node(parent, "user", new_text)
@@ -335,11 +345,6 @@ def render_msg(node: MsgNode):
                     ai_reply = get_ai_response(conv_tree, new_user_id, sel_persona, sel_scenario)
                 new_assist_id = conv_tree.add_node(new_user_id, "assistant", ai_reply)
                 conv_tree.current_leaf_id = new_assist_id
-                st.session_state.editing_msg_id = None
-                st.session_state.editing_content = ""
-                st.rerun()
-        with cancel_col:
-            if st.button("Cancel", key=f"cancel_edit_{node.id}"):
                 st.session_state.editing_msg_id = None
                 st.session_state.editing_content = ""
                 st.rerun()
