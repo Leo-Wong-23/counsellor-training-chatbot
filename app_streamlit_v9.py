@@ -186,6 +186,22 @@ def get_ai_response(conv_tree: ConvTree, pending_user_node_id: str, persona, sce
 
 st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
 
+# Automatically shrink columns on small screens
+st.markdown(
+    """
+    <style>
+      /* On screens ≤600px, make every Streamlit column shrink‑to‑fit */
+      @media (max-width: 600px) {
+        /* select every column container */
+        [data-testid="column"] {
+          flex: 0 0 auto !important;      /* no flex-grow or shrink */
+          max-width: none !important;      /* ignore the usual 100% */
+        }
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ------------------ 3.1  Password gate ------------------
 
