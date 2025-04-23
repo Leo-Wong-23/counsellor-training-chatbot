@@ -194,17 +194,19 @@ IS_MOBILE = bool(SCREEN_W and int(SCREEN_W) < 768)  # Bootstrap’s “md” bre
 
 # --- Mobile-only CSS helper ---
 if IS_MOBILE:
-    st.markdown("""
-    <style>
+    st.markdown("""<style>
       /* make every st.button 40×40 px max on small screens */
-      button[kind="secondary"]              { padding:4px 6px !important;
-                                              height:40px !important;
-                                              width:40px  !important;
-                                              font-size:18px !important; }
+      button[kind="secondary"] {
+        padding:4px 6px !important;
+        height:40px !important;
+        width:40px !important;
+        font-size:18px !important;
+      }
       /* tighten the little text badge */
-      span.mobile-version-indicator         { font-size:16px !important; }
-    </style>
-    """, unsafe_allow_html=True)
+      span.mobile-version-indicator {
+        font-size:16px !important;
+      }
+    </style>""", unsafe_allow_html=True)
 
 # ------------------ 3.1  Password gate ------------------
 
@@ -345,6 +347,23 @@ def render_msg(node: MsgNode, mobile: bool = False):
         TRANSFORM    = "none"    # was translate(-80px,…)
         TRANSFORM_INDICATOR = "none"  # was translate(10px,…)
         TRANSFORM_LB = "none"    # was translate(0px,…)
+
+        st.markdown(
+        """
+        <style>
+        /* Keep the first 4 control columns on the same line even on ≤640 px */
+        @media screen and (max-width: 640px){
+            /* only act inside this specific row by adding a custom parent class */
+            .ctrl-row  > div[data-testid="column"]{
+                flex: 0 0 auto !important;   /* don't stretch */
+                width: auto      !important;  /* natural width */
+                padding: 0 2px   !important;  /* tighten gap */
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True, 
+        )
     else:
         OFFSET_TOP   = "25px"
         OFFSET_TOP_INDICATOR = "32px"     # was 25 px
@@ -401,6 +420,10 @@ def render_msg(node: MsgNode, mobile: bool = False):
             col_left, col_center, col_right, col_edit, col_bubble = st.columns(
                 ratios, gap="small"
             )
+
+            # give the four tiny control-columns the class so the CSS can grab them
+            for c in (col_left, col_center, col_right, col_edit):
+                c.markdown('<div class="ctrl-row"></div>', unsafe_allow_html=True)
 
             # ◀
             with col_left:
