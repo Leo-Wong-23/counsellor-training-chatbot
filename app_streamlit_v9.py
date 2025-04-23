@@ -8,6 +8,8 @@ from datetime import datetime
 from typing import Dict, List, Literal, Optional
 
 import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
+
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -186,22 +188,20 @@ def get_ai_response(conv_tree: ConvTree, pending_user_node_id: str, persona, sce
 
 st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
 
-# Automatically shrink columns on small screens
-st.markdown(
-    """
+# --- Mobile / desktop switch ---
+SCREEN_W = streamlit_js_eval(js_expressions="screen.width", key="w")
+IS_MOBILE = bool(SCREEN_W and int(SCREEN_W) < 768)  # Bootstrap’s “md” breakpoint
+
+# --- Mobile-only CSS helper ---
+if IS_MOBILE:
+    st.markdown("""
     <style>
-      /* On screens ≤600px, make every Streamlit column shrink‑to‑fit */
-      @media (max-width: 600px) {
-        /* select every column container */
-        [data-testid="column"] {
-          flex: 0 0 auto !important;      /* no flex-grow or shrink */
-          max-width: none !important;      /* ignore the usual 100% */
-        }
-      }
+      /* keep st.columns on one row and allow sideways scroll */
+      [data-testid="stColumns"]            { flex-wrap: nowrap !important;
+                                             overflow-x: auto !important; }
+      [data-testid="stColumns"] > div      { flex: 0 0 auto !important; }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
+    """, unsafe_allow_html=True)
 
 # ------------------ 3.1  Password gate ------------------
 
@@ -213,7 +213,7 @@ def check_password():
         st.title("Counsellor Training Chatbot")
         st.markdown(
             """
-            **1Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
+            **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
 
             This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology. This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
 
@@ -222,7 +222,8 @@ def check_password():
             - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (in the Session Evaluation tab).<br><br>
 
             **Features in Development:**
-            - User voice input and dynamic model voice output, like sending and receiving voice messages.<br><br>
+            - User voice input and dynamic model voice output, like sending and receiving voice messages.
+            - Dynamic persona generation, letting the AI generate a persona on the fly. <br><br>
 
             ***Safety & Privacy Statement:***
             This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. 
@@ -326,7 +327,7 @@ with tab_persona:
 
 
 # --------------- Helper: render one message bubble ---------------
-def render_msg(node: MsgNode):
+def render_msg(node: MsgNode, mobile: bool = False):
     role_label = (
         f"Client ({sel_persona['name']})" if node.role == "assistant" else "Trainee (You)"
     )
@@ -373,9 +374,15 @@ def render_msg(node: MsgNode):
         if has_versions:
             # five columns: ◀ | 1/2 | ▶ | Edit | Bubble
             # make control columns tiny compared to the bubble
+            if mobile:
+                ratios = [1, 1, 1, 1, 10]     # super-narrow controls
+                edit_label = "✏️"             # emoji keeps width tiny
+            else:
+                ratios = [1.5, 1.5, 2, 6, 40] # your original desktop ratios
+                edit_label = "Edit Message"
+
             col_left, col_center, col_right, col_edit, col_bubble = st.columns(
-                [1.5, 1.5, 2, 6, 40],  # bubble is 40× wider than each control
-                gap="small",
+                ratios, gap="small"
             )
 
             # ◀
@@ -422,7 +429,7 @@ def render_msg(node: MsgNode):
                     "<div style='display:flex; align-items:center; margin-top:25px; transform: translate(-80px, 0);'>",
                     unsafe_allow_html=True,
                 )
-                if st.button("Edit Message", key=f"edit_{node.id}"):
+                if st.button(edit_label, key=f"edit_{node.id}"):
                     st.session_state.editing_msg_id = node.id
                     st.session_state.editing_content = node.content
                     st.rerun()
@@ -446,15 +453,22 @@ def render_msg(node: MsgNode):
 
         else:
             # no versions → two columns: Edit | Bubble
-            edit_col, bubble_col = st.columns([1,9])
+            if mobile:
+                edit_col, bubble_col = st.columns([1,10], gap="small")
+                edit_label = "✏️"
+            else:
+                edit_col, bubble_col = st.columns([1,9], gap="small")
+                edit_label = "Edit Message"
+
             with edit_col:
                 st.markdown("<div style='display:flex; align-items:center; margin-top:25px;'>",
                             unsafe_allow_html=True)
-                if st.button("Edit Message", key=f"edit_{node.id}"):
+                if st.button(edit_label, key=f"edit_{node.id}"):
                     st.session_state.editing_msg_id = node.id
                     st.session_state.editing_content = node.content
                     st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
+
             with bubble_col:
                 st.markdown(
                     f"""
@@ -491,7 +505,7 @@ def render_msg(node: MsgNode):
 # --------------- TAB 2: Chat Session ---------------
 with tab_chat:
     for node in conv_tree.path_to_leaf()[1:]:
-        render_msg(node)
+        render_msg(node, mobile=IS_MOBILE)
 
     # pending AI response
     if st.session_state.pending_user_node_id:
