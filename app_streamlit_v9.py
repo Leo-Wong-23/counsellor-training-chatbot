@@ -344,11 +344,13 @@ def render_msg(node: MsgNode, mobile: bool = False):
         OFFSET_TOP_INDICATOR = "8px"     # was 25 px
         TRANSFORM    = "none"    # was translate(-80px,…)
         TRANSFORM_INDICATOR = "none"  # was translate(10px,…)
+        TRANSFORM_LB = "none"    # was translate(0px,…)
     else:
         OFFSET_TOP   = "25px"
         OFFSET_TOP_INDICATOR = "32px"     # was 25 px
         TRANSFORM    = "translate(-80px, 0)"
         TRANSFORM_INDICATOR = "translate(10px, 0)"
+        TRANSFORM_LB = "none"  # left button
 
     # ----- 1) EDIT MODE (user only) -----
     if node.role == "user" and st.session_state.editing_msg_id == node.id:
@@ -403,7 +405,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
             # ◀
             with col_left:
                 st.markdown(
-                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM};'>",
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM_LB};'>",
                     unsafe_allow_html=True,
                 )
                 if st.button("◀", key=f"left_{node.id}"):
