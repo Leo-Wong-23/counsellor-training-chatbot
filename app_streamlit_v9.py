@@ -199,14 +199,21 @@ if IS_MOBILE:
         <style>
         /* Keep st.columns compact on screens ≤ 640 px */
         @media (max-width: 640px){
-            /* --- make each column shrink-to-fit --------------------- */
-            div[data-testid="horizontalBlock"]   { row-gap:0 !important; }  /* ← NEW */
+
+            /* 1 · remove the row-gap that forces wrapping */
+            div[data-testid="horizontalBlock"]{
+                row-gap:0 !important;
+            }
+
+            /* 2 · make each column shrink-to-fit */
             div[data-testid="horizontalBlock"] > div[data-testid="column"]{
                 flex:0 0 auto !important;
-                width:auto  !important;
+                width:auto !important;
                 padding-left:4px !important;
                 padding-right:4px !important;
-            /* collapse any horizontal block that ended up empty */
+            }
+
+            /* 3 · hide any empty row (prevents the blank band) */
             div[data-testid="horizontalBlock"]:not(:has(button,span)){
                 display:none !important;
             }
