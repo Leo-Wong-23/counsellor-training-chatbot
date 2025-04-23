@@ -197,28 +197,25 @@ if IS_MOBILE:
     st.markdown(
         """
         <style>
-        /* --- keep columns inline on ≤ 640 px screens ------------------- */
+        /* Keep st.columns compact on screens ≤ 640 px */
         @media (max-width: 640px){
-
-            /* 1 · don’t let the columns fill 100 % width  */
-            div[data-testid="column"]{
-                flex: 0 0 auto !important;
-                width:auto      !important;
+            /* --- make each column shrink-to-fit --------------------- */
+            div[data-testid="horizontalBlock"]   { row-gap:0 !important; }  /* ← NEW */
+            div[data-testid="horizontalBlock"] > div[data-testid="column"]{
+                flex:0 0 auto !important;
+                width:auto  !important;
                 padding-left:4px !important;
                 padding-right:4px !important;
-            }
-
-            /* 2 · **NEW** – kill the vertical gap Streamlit inserts here  */
-            div[data-testid="column"] > div:first-child{
-                margin:0 !important;          /* <— this line */
+            /* collapse any horizontal block that ended up empty */
+            div[data-testid="horizontalBlock"]:not(:has(button,span)){
+                display:none !important;
             }
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
-
-
+    
 # ------------------ 3.1  Password gate ------------------
 
 def check_password():
