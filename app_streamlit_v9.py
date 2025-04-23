@@ -335,7 +335,6 @@ with tab_persona:
 # Helper: render one message bubble  (desktop + new mobile layout)
 # ---------------------------------------------------------------------------
 def render_msg(node: MsgNode, mobile: bool = False):
-    st.write(">>> NEW render_msg engaged – mobile =", mobile)   # DEBUG
     # ----- generic style helpers ------------------------------------------
     role_label = (
         f"Client ({sel_persona['name']})" if node.role == "assistant"
