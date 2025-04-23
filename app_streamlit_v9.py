@@ -331,134 +331,171 @@ with tab_persona:
         st.markdown(f"- **Context:** {sel_scenario.get('contextual_details', '')}")
 
 
-# --------------- Helper: render one message bubble ---------------
+# ---------------------------------------------------------------------------
+# Helper: render one message bubble  (desktop + new mobile layout)
+# ---------------------------------------------------------------------------
 def render_msg(node: MsgNode, mobile: bool = False):
+    # ----- generic style helpers ------------------------------------------
     role_label = (
-        f"Client ({sel_persona['name']})" if node.role == "assistant" else "Trainee (You)"
+        f"Client ({sel_persona['name']})" if node.role == "assistant"
+        else "Trainee (You)"
     )
-    align = "flex-start" if node.role == "assistant" else "flex-end"
-    bubble_color = "#1b222a" if node.role == "assistant" else "#0e2a47"
-    text_color = "white"
+    align        = "flex-start" if node.role == "assistant" else "flex-end"
+    bubble_color = "#1b222a"     if node.role == "assistant" else "#0e2a47"
+    text_color   = "white"
 
-    # remove large top-margins & translations on phones
+    # put most of the “large-screen tweakery” behind the mobile switch
     if mobile:
-        OFFSET_TOP   = "8px"     # was 25–32 px
-        OFFSET_TOP_INDICATOR = "8px"     # was 25 px
-        TRANSFORM    = "none"    # was translate(-80px,…)
-        TRANSFORM_INDICATOR = "none"  # was translate(10px,…)
-        TRANSFORM_LB = "none"    # was translate(0px,…)
-
-        st.markdown(
-        """
-        <style>
-        /* Keep the first 4 control columns on the same line even on ≤640 px */
-        @media screen and (max-width: 640px){
-            /* only act inside this specific row by adding a custom parent class */
-            .ctrl-row  > div[data-testid="column"]{
-                flex: 0 0 auto !important;   /* don't stretch */
-                width: auto      !important;  /* natural width */
-                padding: 0 2px   !important;  /* tighten gap */
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True, 
-        )
+        OFFSET_TOP            = "8px"
+        OFFSET_TOP_INDICATOR  = "8px"
+        TRANSFORM             = "none"
+        TRANSFORM_INDICATOR   = "none"
+        TRANSFORM_LB          = "none"
     else:
-        OFFSET_TOP   = "25px"
-        OFFSET_TOP_INDICATOR = "32px"     # was 25 px
-        TRANSFORM    = "translate(-80px, 0)"
-        TRANSFORM_INDICATOR = "translate(10px, 0)"
-        TRANSFORM_LB = "none"  # left button
+        OFFSET_TOP            = "25px"
+        OFFSET_TOP_INDICATOR  = "32px"
+        TRANSFORM             = "translate(-80px, 0)"
+        TRANSFORM_INDICATOR   = "translate(10px, 0)"
+        TRANSFORM_LB          = "none"
 
-    # ----- 1) EDIT MODE (user only) -----
+    # ------------------------------------------------------------------
+    # 1) “edit mode” for the trainee’s own message
+    # ------------------------------------------------------------------
     if node.role == "user" and st.session_state.editing_msg_id == node.id:
         new_text = st.text_area(
             "Edit your message:",
             value=st.session_state.editing_content or node.content,
             key=f"textarea_{node.id}",
         )
-
-        col_l, col_cancel, col_send, col_r = st.columns([6,1,1,6], gap="small")
+        col_l, col_cancel, col_send, col_r = st.columns([6, 1, 1, 6], gap="small")
 
         with col_cancel:
-            # Cancel on the left
             if st.button("Cancel", key=f"cancel_edit_{node.id}"):
                 st.session_state.editing_msg_id = None
                 st.session_state.editing_content = ""
                 st.rerun()
 
         with col_send:
-            # Send on the right
             if st.button("Send", key=f"send_edit_{node.id}"):
-                parent = node.parent_id  # type: ignore
+                parent = node.parent_id                     # ⬅ current branch root
                 new_user_id = conv_tree.add_node(parent, "user", new_text)
-                with st.spinner("Client is responding..."):
-                    ai_reply = get_ai_response(conv_tree, new_user_id, sel_persona, sel_scenario)
+                with st.spinner("Client is responding…"):
+                    ai_reply = get_ai_response(conv_tree, new_user_id,
+                                               sel_persona, sel_scenario)
                 new_assist_id = conv_tree.add_node(new_user_id, "assistant", ai_reply)
                 conv_tree.current_leaf_id = new_assist_id
                 st.session_state.editing_msg_id = None
                 st.session_state.editing_content = ""
                 st.rerun()
-        return  # don’t fall through to normal render
+        return  # don’t fall through to normal rendering
 
-    # ----- 2) USER MESSAGES + VERSION CONTROLS -----
+    # ------------------------------------------------------------------
+    # 2) Trainee messages (with or without version controls)
+    # ------------------------------------------------------------------
     if node.role == "user":
-        sibs = conv_tree.siblings(node.id)
-        has_versions = len(sibs) > 1
+        sibs          = conv_tree.siblings(node.id)
+        has_versions  = len(sibs) > 1
 
+        # -------------------- 2a. *With* (re-)version controls ------------
         if has_versions:
-            # five columns: ◀ | 1/2 | ▶ | Edit | Bubble
-            # make control columns tiny compared to the bubble
+            idx    = conv_tree.sibling_index(node.id) + 1
+            total  = len(sibs)
+
+            # ====== PHONE LAYOUT (OPTION B) ===============================
             if mobile:
-                ratios = [1, 1, 1, 1, 10]     # super-narrow controls
-                edit_label = "✏️"             # emoji keeps width tiny
-            else:
-                ratios = [1.5, 1.5, 2, 6, 40] # your original desktop ratios
-                edit_label = "Edit Message"
+                # Inject the CSS once per session
+                if "mob_css_injected" not in st.session_state:
+                    st.markdown(
+                        """
+                        <style>
+                        /* tiny flex row that survives Streamlit’s mobile stacking  */
+                        .mobile-ctrls{
+                            display:flex; align-items:center; gap:6px;
+                            margin-top:8px; margin-bottom:2px;
+                        }
+                        .mobile-ctrls button[kind="secondary"]{
+                            width:34px!important; height:34px!important;
+                            padding:2px 4px!important; font-size:18px!important;
+                        }
+                        .mobile-ctrls span.ver{
+                            min-width:38px; text-align:center; font-size:16px;
+                        }
+                        </style>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    st.session_state.mob_css_injected = True
 
-            col_left, col_center, col_right, col_edit, col_bubble = st.columns(
-                ratios, gap="small"
-            )
+                # ---- flex container for ◀ 1/2 ▶ ✏️ ----------------------
+                with st.container():
+                    st.markdown('<div class="mobile-ctrls">', unsafe_allow_html=True)
 
-            # give the four tiny control-columns the class so the CSS can grab them
-            for c in (col_left, col_center, col_right, col_edit):
-                c.markdown('<div class="ctrl-row"></div>', unsafe_allow_html=True)
+                    # ◀ previous
+                    if st.button("◀", key=f"left_{node.id}"):
+                        conv_tree.select_sibling(node.id, -1)
+                        st.rerun()
 
-            # ◀
-            with col_left:
-                st.markdown(
-                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM_LB};'>",
-                    unsafe_allow_html=True,
-                )
-                if st.button("◀", key=f"left_{node.id}"):
-                    conv_tree.select_sibling(node.id, -1); st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+                    # version badge
+                    st.markdown(f"<span class='ver'>{idx}/{total}</span>",
+                                unsafe_allow_html=True)
 
-            # Version indicator
-            idx = conv_tree.sibling_index(node.id) + 1
-            total = len(sibs)
-            with col_center:
+                    # ▶ next
+                    if st.button("▶", key=f"right_{node.id}"):
+                        conv_tree.select_sibling(node.id, +1)
+                        st.rerun()
+
+                    # ✏️ edit
+                    if st.button("✏️", key=f"edit_{node.id}"):
+                        st.session_state.editing_msg_id = node.id
+                        st.session_state.editing_content = node.content
+                        st.rerun()
+
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                # ----- finally the message bubble itself -----------------
                 st.markdown(
                     f"""
-                    <div style="
-                    display:flex;
-                    align-items:center;
-                    margin-top:{OFFSET_TOP_INDICATOR};
-                    transform: {TRANSFORM_INDICATOR};
-                    ">
-                    {idx}/{total}
+                    <div style='display:flex; justify-content:{align}; margin:4px 0 12px;'>
+                      <div style='background-color:{bubble_color}; color:{text_color};
+                                  padding:12px 16px; border-radius:18px;
+                                  max-width:75%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                                  font-size:16px; line-height:1.5;'>
+                        <strong>{role_label}:</strong><br>{node.content}
+                      </div>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
+                return  # phone version done
+
+            # ====== DESKTOP LAYOUT (unchanged from your original) =========
+            col_left, col_center, col_right, col_edit, col_bubble = st.columns(
+                [1.5, 1.5, 2, 6, 40], gap="small"
+            )
+
+            # ◀
+            with col_left:
+                st.markdown(
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform:{TRANSFORM_LB};'>",
+                    unsafe_allow_html=True)
+                if st.button("◀", key=f"left_{node.id}"):
+                    conv_tree.select_sibling(node.id, -1); st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # 1/2
+            with col_center:
+                st.markdown(
+                    f"""
+                    <div style='display:flex; align-items:center; margin-top:{OFFSET_TOP_INDICATOR};
+                                transform:{TRANSFORM_INDICATOR};'>{idx}/{total}</div>
+                    """,
+                    unsafe_allow_html=True)
 
             # ▶
             with col_right:
                 st.markdown(
-                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM};'>",
-                    unsafe_allow_html=True,
-                )
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform:{TRANSFORM};'>",
+                    unsafe_allow_html=True)
                 if st.button("▶", key=f"right_{node.id}"):
                     conv_tree.select_sibling(node.id, +1); st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -466,10 +503,9 @@ def render_msg(node: MsgNode, mobile: bool = False):
             # Edit
             with col_edit:
                 st.markdown(
-                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM};'>",
-                    unsafe_allow_html=True,
-                )
-                if st.button(edit_label, key=f"edit_{node.id}"):
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform:{TRANSFORM};'>",
+                    unsafe_allow_html=True)
+                if st.button("Edit Message", key=f"edit_{node.id}"):
                     st.session_state.editing_msg_id = node.id
                     st.session_state.editing_content = node.content
                     st.rerun()
@@ -490,43 +526,45 @@ def render_msg(node: MsgNode, mobile: bool = False):
                     """,
                     unsafe_allow_html=True,
                 )
+            return  # end “user w/versions” path
 
+        # -------------------- 2b. trainee message WITHOUT versions --------
+        if mobile:
+            edit_col, bubble_col = st.columns([1, 10], gap="small")
+            edit_label = "✏️"
         else:
-            # no versions → two columns: Edit | Bubble
-            if mobile:
-                edit_col, bubble_col = st.columns([1,10], gap="small")
-                edit_label = "✏️"
-            else:
-                edit_col, bubble_col = st.columns([1,9], gap="small")
-                edit_label = "Edit Message"
+            edit_col, bubble_col = st.columns([1, 9], gap="small")
+            edit_label = "Edit Message"
 
-            with edit_col:
-                st.markdown(f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP};'>",
-                            unsafe_allow_html=True)
-                if st.button(edit_label, key=f"edit_{node.id}"):
-                    st.session_state.editing_msg_id = node.id
-                    st.session_state.editing_content = node.content
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+        with edit_col:
+            st.markdown(
+                f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP};'>",
+                unsafe_allow_html=True)
+            if st.button(edit_label, key=f"edit_{node.id}"):
+                st.session_state.editing_msg_id = node.id
+                st.session_state.editing_content = node.content
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            with bubble_col:
-                st.markdown(
-                    f"""
-                    <div style='display:flex; justify-content:{align}; margin:8px 0;'>
-                      <div style='background-color:{bubble_color}; color:{text_color};
-                                  padding:12px 16px; border-radius:18px;
-                                  max-width:75%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
-                                  font-size:16px; line-height:1.5;'>
-                        <strong>{role_label}:</strong><br>{node.content}
-                      </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+        with bubble_col:
+            st.markdown(
+                f"""
+                <div style='display:flex; justify-content:{align}; margin:8px 0;'>
+                  <div style='background-color:{bubble_color}; color:{text_color};
+                              padding:12px 16px; border-radius:18px;
+                              max-width:75%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                              font-size:16px; line-height:1.5;'>
+                    <strong>{role_label}:</strong><br>{node.content}
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        return  # end “user w/o versions” path
 
-        return  # done with user rendering
-
-    # ----- 3) ASSISTANT (simulated client) MESSAGES -----
+    # ------------------------------------------------------------------
+    # 3) Assistant (simulated client) bubble – unchanged
+    # ------------------------------------------------------------------
     st.markdown(
         f"""
         <div style='display:flex; justify-content:{align}; margin:8px 0;'>
