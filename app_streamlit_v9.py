@@ -194,19 +194,19 @@ IS_MOBILE = bool(SCREEN_W and int(SCREEN_W) < 768)  # Bootstrap’s “md” bre
 
 # --- Mobile-only CSS helper ---
 if IS_MOBILE:
-    st.markdown("""<style>
-      /* make every st.button 40×40 px max on small screens */
-      button[kind="secondary"] {
-        padding:4px 6px !important;
-        height:40px !important;
-        width:40px !important;
-        font-size:18px !important;
-      }
-      /* tighten the little text badge */
-      span.mobile-version-indicator {
-        font-size:16px !important;
-      }
-    </style>""", unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+        @media (max-width: 640px){
+            /* all st.columns children */
+            div[data-testid="column"]{
+                flex: 0 0 auto !important;   /* don’t stretch */
+                width: auto    !important;   /* shrink to content */
+                padding-left: 4px !important;
+                padding-right:4px !important;
+            }
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
 # ------------------ 3.1  Password gate ------------------
 
