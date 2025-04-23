@@ -3,3 +3,4 @@ openai
 python-dotenv
 pandas
 numpy
+streamlit-js-eval
