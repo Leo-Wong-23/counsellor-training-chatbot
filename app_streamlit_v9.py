@@ -196,10 +196,13 @@ IS_MOBILE = bool(SCREEN_W and int(SCREEN_W) < 768)  # Bootstrap’s “md” bre
 if IS_MOBILE:
     st.markdown("""
     <style>
-      /* keep st.columns on one row and allow sideways scroll */
-      [data-testid="stColumns"]            { flex-wrap: nowrap !important;
-                                             overflow-x: auto !important; }
-      [data-testid="stColumns"] > div      { flex: 0 0 auto !important; }
+      /* make every st.button 40×40 px max on small screens */
+      button[kind="secondary"]              { padding:4px 6px !important;
+                                              height:40px !important;
+                                              width:40px  !important;
+                                              font-size:18px !important; }
+      /* tighten the little text badge */
+      span.mobile-version-indicator         { font-size:16px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -335,6 +338,18 @@ def render_msg(node: MsgNode, mobile: bool = False):
     bubble_color = "#1b222a" if node.role == "assistant" else "#0e2a47"
     text_color = "white"
 
+    # remove large top-margins & translations on phones
+    if mobile:
+        OFFSET_TOP   = "8px"     # was 25–32 px
+        OFFSET_TOP_INDICATOR = "8px"     # was 25 px
+        TRANSFORM    = "none"    # was translate(-80px,…)
+        TRANSFORM_INDICATOR = "none"  # was translate(10px,…)
+    else:
+        OFFSET_TOP   = "25px"
+        OFFSET_TOP_INDICATOR = "32px"     # was 25 px
+        TRANSFORM    = "translate(-80px, 0)"
+        TRANSFORM_INDICATOR = "translate(10px, 0)"
+
     # ----- 1) EDIT MODE (user only) -----
     if node.role == "user" and st.session_state.editing_msg_id == node.id:
         new_text = st.text_area(
@@ -388,7 +403,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
             # ◀
             with col_left:
                 st.markdown(
-                    "<div style='display:flex; align-items:center; margin-top:25px; transform: translate(0px, 0);'>",
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM};'>",
                     unsafe_allow_html=True,
                 )
                 if st.button("◀", key=f"left_{node.id}"):
@@ -404,8 +419,8 @@ def render_msg(node: MsgNode, mobile: bool = False):
                     <div style="
                     display:flex;
                     align-items:center;
-                    margin-top:32px;
-                    transform: translate(10px, 0);
+                    margin-top:{OFFSET_TOP_INDICATOR};
+                    transform: {TRANSFORM_INDICATOR};
                     ">
                     {idx}/{total}
                     </div>
@@ -416,7 +431,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
             # ▶
             with col_right:
                 st.markdown(
-                    "<div style='display:flex; align-items:center; margin-top:25px; transform: translate(-80px, 0);'>",
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM};'>",
                     unsafe_allow_html=True,
                 )
                 if st.button("▶", key=f"right_{node.id}"):
@@ -426,7 +441,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
             # Edit
             with col_edit:
                 st.markdown(
-                    "<div style='display:flex; align-items:center; margin-top:25px; transform: translate(-80px, 0);'>",
+                    f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform: {TRANSFORM};'>",
                     unsafe_allow_html=True,
                 )
                 if st.button(edit_label, key=f"edit_{node.id}"):
@@ -461,7 +476,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
                 edit_label = "Edit Message"
 
             with edit_col:
-                st.markdown("<div style='display:flex; align-items:center; margin-top:25px;'>",
+                st.markdown(f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP};'>",
                             unsafe_allow_html=True)
                 if st.button(edit_label, key=f"edit_{node.id}"):
                     st.session_state.editing_msg_id = node.id
