@@ -194,19 +194,22 @@ IS_MOBILE = bool(SCREEN_W and int(SCREEN_W) < 768)  # Bootstrap’s “md” bre
 
 # --- Mobile-only CSS helper ---
 if IS_MOBILE:
-    st.markdown("""
+    st.markdown(
+        """
         <style>
+        /*  Keep Streamlit columns side-by-side on screens ≤ 640 px  */
         @media (max-width: 640px){
-            /* all st.columns children */
             div[data-testid="column"]{
-                flex: 0 0 auto !important;   /* don’t stretch */
-                width: auto    !important;   /* shrink to content */
+                flex: 0 0 auto !important;   /* don’t stretch to full width   */
+                width: auto    !important;   /* shrink to the content’s width */
                 padding-left: 4px !important;
                 padding-right:4px !important;
             }
         }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ------------------ 3.1  Password gate ------------------
 
@@ -218,7 +221,7 @@ def check_password():
         st.title("Counsellor Training Chatbot")
         st.markdown(
             """
-            **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
+            **2Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
 
             This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology. This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
 
