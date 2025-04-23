@@ -197,19 +197,27 @@ if IS_MOBILE:
     st.markdown(
         """
         <style>
-        /*  Keep Streamlit columns side-by-side on screens ≤ 640 px  */
+        /* --- keep columns inline on ≤ 640 px screens ------------------- */
         @media (max-width: 640px){
+
+            /* 1 · don’t let the columns fill 100 % width  */
             div[data-testid="column"]{
-                flex: 0 0 auto !important;   /* don’t stretch to full width   */
-                width: auto    !important;   /* shrink to the content’s width */
-                padding-left: 4px !important;
+                flex: 0 0 auto !important;
+                width:auto      !important;
+                padding-left:4px !important;
                 padding-right:4px !important;
+            }
+
+            /* 2 · **NEW** – kill the vertical gap Streamlit inserts here  */
+            div[data-testid="column"] > div:first-child{
+                margin:0 !important;          /* <— this line */
             }
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
 
 # ------------------ 3.1  Password gate ------------------
 
@@ -221,7 +229,7 @@ def check_password():
         st.title("Counsellor Training Chatbot")
         st.markdown(
             """
-            **2Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
+            **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this Counsellor Training Chatbot that I built!**
 
             This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology. This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
 
