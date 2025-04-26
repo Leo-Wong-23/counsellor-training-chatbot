@@ -13,7 +13,6 @@ from streamlit_js_eval import streamlit_js_eval
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from evaluate_session_v2 import evaluate_counselling_session
 
 # -----------------------------------------------------------------------------
 # 0.  Low‑level conversation tree classes
@@ -125,7 +124,7 @@ client = OpenAI(api_key=API_KEY)
 
 
 # -----------------------------------------------------------------------------
-# 2.  Utility functions (personas, system message, prompt)
+# 2a.  Utility functions (personas, system message, prompt)
 # -----------------------------------------------------------------------------
 
 def load_personas():
@@ -158,7 +157,7 @@ def build_system_message(persona, scenario=None):
 
 def build_prompt(conv_tree: ConvTree, system_msg: str) -> List[Dict[str, str]]:
     msgs = [
-        {"role": "developer", "content": system_msg},
+        {"role": "system", "content": system_msg},
     ]
     for node in conv_tree.path_to_leaf()[1:]:  # skip root
         if node.role in {"user", "assistant"}:
@@ -176,10 +175,67 @@ def get_ai_response(conv_tree: ConvTree, pending_user_node_id: str, persona, sce
         model="gpt-4.1-mini",
         messages=messages,
         max_tokens=5000,
-        temperature=0.7,
+        temperature=1,
     )
     ai_content = response.choices[0].message.content
     return ai_content
+
+
+# -------------------------------------------------------------------------
+# 2 · Evaluation helpers  (NEW)
+# -------------------------------------------------------------------------
+SUPERVISOR_PROMPT = """
+You are a clinical supervisor providing feedback to a trainee counsellor (role: user) based on a session transcript
+between the trainee and a client.
+Assess the trainee's counselling techniques based on:
+1. Empathy
+2. Communication Clarity
+3. Active Listening
+4. Appropriateness of Responses
+5. Overall Effectiveness
+
+- Provide a concise analysis, with specific conversation details as examples when appropriate, 
+and suggest 2-3 actionable improvements for the trainee. 
+- If the trainee asks follow-up questions, answer them concisely with relevant examples.
+- Maintain a supportive and constructive tone.
+""".strip()
+
+
+def initial_evaluation(api_key: str, counselling_history: list[dict]) -> tuple[str, str]:
+    transcript = "\n".join(
+        f"{'Client' if m['role']=='assistant' else 'Trainee'}: {m['content']}"
+        for m in counselling_history
+    )
+
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SUPERVISOR_PROMPT},
+            {"role": "user",   "content": transcript},
+        ],
+        max_tokens=1500,
+        temperature=0.7,
+    )
+    feedback = response.choices[0].message.content
+    return feedback, transcript
+
+
+def supervisor_chat(api_key: str,
+                    transcript: str,
+                    chat_history: list[dict]) -> str:
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SUPERVISOR_PROMPT},
+            {"role": "user",   "content": transcript},   # 〈NEW〉 keeps context
+            *chat_history,
+        ],
+        max_tokens=1000,
+        temperature=0.7,
+    )
+    return response.choices[0].message.content
 
 
 # -----------------------------------------------------------------------------
@@ -297,7 +353,7 @@ if "evaluation_feedback" not in st.session_state:
     st.session_state.evaluation_feedback = {}
 if "evaluation_assistant_conversation" not in st.session_state:
     st.session_state.evaluation_assistant_conversation = {}
-
+if "evaluation_transcript" not in st.session_state: st.session_state.evaluation_transcript = {}
 
 # ------------------ 3.3  Sidebar (persona & scenario) ------------------
 
@@ -625,109 +681,113 @@ with tab_chat:
         st.rerun()
 
 
-# --------------- TAB 3: Session Evaluation ---------------
+# ---------------- TAB 3 · Session Evaluation (REPLACED) ------------------
+# -----------------------------------------------------------------
+# Tiny helper to show one chat bubble            〈NEW〉
+# -----------------------------------------------------------------
+def print_bubble(msg: dict[str, str]) -> None:
+    """
+    msg = {"role": "assistant" | "user", "content": str}
+    • assistant  → Evaluation Assistant (left-aligned, #1b222a)
+    • user       → Trainee (right-aligned, #0e2a47)
+    """
+    role_label   = "Evaluation Assistant" if msg["role"] == "assistant" else "Trainee (You)"
+    align        = "flex-start"           if msg["role"] == "assistant" else "flex-end"
+    bubble_color = "#1b222a"              if msg["role"] == "assistant" else "#0e2a47"
+    text_color   = "white"
+
+    st.markdown(
+        f"""
+        <div style='display:flex; justify-content:{align}; margin:8px 0;'>
+          <div style='background-color:{bubble_color}; color:{text_color};
+                      padding:12px 16px; border-radius:18px;
+                      max-width:75%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                      font-size:16px; line-height:1.5;'>  
+            <strong>{role_label}:</strong><br>{msg['content']}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 with tab_eval:
     branch = st.session_state.conv_tree.path_to_leaf()[1:]
     if not branch:
         st.info("No conversation to evaluate yet. Have a chat first.")
-    else:
-        branch_key = st.session_state.conv_tree.current_leaf_id
+        st.stop()
 
-        # 1) Initial evaluation
-        if branch_key not in st.session_state.evaluation_feedback:
-            if st.button("Evaluate Session"):
-                with st.spinner("Evaluating session…"):
-                    flat_history = [
-                        {"role": n.role, "content": n.content}
-                        for n in branch
-                        if n.role != "system"
-                    ]
-                    feedback = evaluate_counselling_session(API_KEY, flat_history)
-                    st.session_state.evaluation_feedback[branch_key] = feedback
-                    st.session_state.evaluation_assistant_conversation[branch_key] = []
-                st.success("Evaluation complete!")
-                st.rerun()
-        else:
-            # Show static evaluation feedback in bubble style
-            st.markdown(
-                f"""
-                <div style='display:flex; justify-content:flex-start; margin:8px 0;'>
-                  <div style='background-color:#1b222a; color:white;
-                              padding:12px 16px; border-radius:18px;
-                              max-width:75%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
-                              font-size:16px; line-height:1.5;'>
-                    <strong>Evaluation Assistant:</strong><br>{st.session_state.evaluation_feedback[branch_key]}
-                  </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            # 2) Interactive Q&A with Evaluation Assistant
-            qa = st.session_state.evaluation_assistant_conversation[branch_key]
-            for msg in qa:
-                role_label = "Evaluation Assistant" if msg["role"] == "assistant" else "Trainee (You)"
-                align = "flex-start" if msg["role"] == "assistant" else "flex-end"
-                bubble_color = "#1b222a" if msg["role"] == "assistant" else "#0e2a47"
-                text_color = "white"
+    branch_key = st.session_state.conv_tree.current_leaf_id
 
-                st.markdown(
-                    f"""
-                    <div style='display:flex; justify-content:{align}; margin:8px 0;'>
-                      <div style='background-color:{bubble_color}; color:{text_color};
-                                  padding:12px 16px; border-radius:18px;
-                                  max-width:75%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
-                                  font-size:16px; line-height:1.5;'>  
-                        <strong>{role_label}:</strong><br>{msg['content']}
-                      </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
+    # ── First-time evaluation ───────────────────────────────────────────
+    if branch_key not in st.session_state.evaluation_feedback:
+        if st.button("Evaluate Session"):
+            with st.spinner("Evaluating session…"):
+                counselling_history = [
+                    {"role": n.role, "content": n.content}
+                    for n in branch
+                    if n.role != "system"
+                ]
+
+                # ⤵︎ unpack BOTH values returned by initial_evaluation
+                feedback, transcript = initial_evaluation(API_KEY, counselling_history)
+
+            # save to session_state
+            st.session_state.evaluation_feedback[branch_key]               = feedback
+            st.session_state.evaluation_transcript[branch_key]             = transcript
+            st.session_state.evaluation_assistant_conversation[branch_key] = [
+                {"role": "assistant", "content": feedback}
+            ]
+            st.rerun()
+
+    # ── Display & follow-up Q & A ────────────────────────────────────────
+    if branch_key in st.session_state.evaluation_feedback:
+
+        qa = st.session_state.evaluation_assistant_conversation[branch_key]
+
+        # chat bubbles – use your existing bubble-rendering helper
+        for msg in qa:
+            print_bubble(msg)          #   <-- whatever you used before
+
+        follow_up = st.chat_input("Ask your supervisor…")
+        if follow_up:
+            qa.append({"role": "user", "content": follow_up})
+
+            with st.spinner("Supervisor is thinking…"):
+                answer = supervisor_chat(
+                    API_KEY,
+                    st.session_state.evaluation_transcript[branch_key],   # 〈NEW〉
+                    qa
                 )
-            # Input box for follow-up questions above Re‑evaluate
-            follow_up = st.chat_input("Ask a question...")
-            if follow_up:
-                with st.spinner("Evaluation assistant is thinking..."):
-                    context = (
-                        [{"role": "assistant", "content": st.session_state.evaluation_feedback[branch_key]}]
-                        + qa
-                        + [{"role": "user", "content": follow_up}]
-                    )
-                    ans = evaluate_counselling_session(API_KEY, context)
-                qa.append({"role": "user", "content": follow_up})
-                qa.append({"role": "assistant", "content": ans})
-                st.session_state.evaluation_assistant_conversation[branch_key] = qa
-                st.rerun()
-            # Re‑evaluate if desired
-            if st.button("Re‑evaluate current conversation branch"):
-                del st.session_state.evaluation_feedback[branch_key]
-                del st.session_state.evaluation_assistant_conversation[branch_key]
-                st.rerun()
 
-        # Transcript download
-        def build_transcript(nodes: List[MsgNode], key: str) -> str:
-            lines: List[str] = []
-            for n in nodes:
-                if n.role == "assistant":
-                    lines.append(f"Client: {n.content}")
-                elif n.role == "user":
-                    lines.append(f"Trainee: {n.content}")
-            # include initial evaluation and Q&A
-            if key in st.session_state.evaluation_feedback:
-                lines.append("---\n\n### Evaluation Feedback")
-                lines.append(f"Evaluation Assistant (Initial Evaluation): {st.session_state.evaluation_feedback[key]}")
-                if key in st.session_state.evaluation_assistant_conversation:
-                    for m in st.session_state.evaluation_assistant_conversation[key]:
-                        role = "Evaluation Assistant" if m["role"] == "assistant" else "Trainee"
-                        lines.append(f"{role}: {m['content']}")
-            return "\n".join(lines)
+            qa.append({"role": "assistant", "content": answer})
+            st.session_state.evaluation_assistant_conversation[branch_key] = qa
+            st.rerun()
 
-        transcript = build_transcript(branch, branch_key)
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        st.download_button(
-            label="Download Full Session Transcript (with Evaluation & Q&A)",
-            data=transcript,
-            file_name=f"counselling_session_{ts}.txt",
-        )
+        # optional: let the trainee scrap the feedback and start over
+        if st.button("Re-evaluate this branch from scratch"):
+            st.session_state.evaluation_feedback.pop(branch_key, None)
+            st.session_state.evaluation_assistant_conversation.pop(branch_key, None)
+            st.rerun()
+
+    # ── Download full transcript (+eval +Q&A) ────────────────────────────
+    lines = [
+        ("Client"   if n.role == "assistant" else "Trainee") + ": " + n.content
+        for n in branch
+        if n.role in {"user", "assistant"}
+    ]
+    if branch_key in st.session_state.evaluation_assistant_conversation:
+        for m in st.session_state.evaluation_assistant_conversation[branch_key]:
+            who = "Supervisor" if m["role"] == "assistant" else "Trainee"
+            lines.append(f"{who}: {m['content']}")
+
+    transcript = "\n".join(lines)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    st.download_button(
+        "Download Full Session Transcript (with Evaluation & Q&A)",
+        data=transcript,
+        file_name=f"counselling_session_{ts}.txt",
+    )
 
 # -----------------------------------------------------------------------------
 # 4.  __main__ guard
