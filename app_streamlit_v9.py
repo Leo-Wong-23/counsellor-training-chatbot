@@ -764,11 +764,11 @@ with tab_eval:
         for msg in qa:
             print_bubble(msg)          #   <-- whatever you used before
 
-        follow_up = st.chat_input("Ask your supervisor…")
+        follow_up = st.chat_input("Ask the evaluation assistant…")
         if follow_up:
             qa.append({"role": "user", "content": follow_up})
 
-            with st.spinner("Supervisor is thinking…"):
+            with st.spinner("Evaluation assistant is thinking…"):
                 answer = supervisor_chat(
                     API_KEY,
                     st.session_state.evaluation_transcript[branch_key],   # 〈NEW〉
@@ -792,11 +792,12 @@ with tab_eval:
         if n.role in {"user", "assistant"}
     ]
     if branch_key in st.session_state.evaluation_assistant_conversation:
+        lines.extend([""])          # Blank lines between sections
         for m in st.session_state.evaluation_assistant_conversation[branch_key]:
-            who = "Supervisor" if m["role"] == "assistant" else "Trainee"
+            who = "Evaluation Assistant" if m["role"] == "assistant" else "Trainee"
             lines.append(f"{who}: {m['content']}")
 
-    transcript = "\n".join(lines)
+    transcript = "\n\n".join(lines)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     st.download_button(
         "Download Full Session Transcript (with Evaluation & Q&A)",
