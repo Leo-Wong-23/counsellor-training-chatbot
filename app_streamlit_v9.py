@@ -278,7 +278,9 @@ if IS_MOBILE:
         """,
         unsafe_allow_html=True,
     )
-    
+
+BUBBLE_MAX = "90%" if IS_MOBILE else "75%"
+
 # ------------------ 3.1  Password gate ------------------
 
 def check_password():
@@ -529,7 +531,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
                     <div style='display:flex; justify-content:{align}; margin:4px 0 12px;'>
                       <div style='background-color:{bubble_color}; color:{text_color};
                                   padding:12px 16px; border-radius:18px;
-                                  max-width:85%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                                  max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
                                   font-size:16px; line-height:1.5;'>
                         <strong>{role_label}:</strong><br>{node.content}
                       </div>
@@ -589,7 +591,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
                     <div style='display:flex; justify-content:{align}; margin:8px 0;'>
                       <div style='background-color:{bubble_color}; color:{text_color};
                                   padding:12px 16px; border-radius:18px;
-                                  max-width:85%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                                  max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
                                   font-size:16px; line-height:1.5;'>
                         <strong>{role_label}:</strong><br>{node.content}
                       </div>
@@ -623,7 +625,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
                 <div style='display:flex; justify-content:{align}; margin:8px 0;'>
                   <div style='background-color:{bubble_color}; color:{text_color};
                               padding:12px 16px; border-radius:18px;
-                              max-width:85%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                              max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
                               font-size:16px; line-height:1.5;'>
                     <strong>{role_label}:</strong><br>{node.content}
                   </div>
@@ -641,7 +643,7 @@ def render_msg(node: MsgNode, mobile: bool = False):
         <div style='display:flex; justify-content:{align}; margin:8px 0;'>
           <div style='background-color:{bubble_color}; color:{text_color};
                       padding:12px 16px; border-radius:18px;
-                      max-width:85%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                      max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
                       font-size:16px; line-height:1.5;'>
             <strong>{role_label}:</strong><br>{node.content}
           </div>
@@ -701,7 +703,7 @@ def print_bubble(msg: dict[str, str]) -> None:
         <div style='display:flex; justify-content:{align}; margin:8px 0;'>
           <div style='background-color:{bubble_color}; color:{text_color};
                       padding:12px 16px; border-radius:18px;
-                      max-width:85%; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                      max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
                       font-size:16px; line-height:1.5;'>  
             <strong>{role_label}:</strong><br>{msg['content']}
           </div>
