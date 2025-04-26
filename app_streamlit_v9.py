@@ -244,6 +244,20 @@ def supervisor_chat(api_key: str,
 
 st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
 
+st.markdown(
+    """
+    <style>
+        div.block-container{
+            padding-top: 0rem !important;   /* remove the 2-rem gap everywhere */
+        }
+        .stTabs{                           /* keep the tab bar flush as well */
+            margin-top: 0rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # --- Mobile / desktop switch ---
 SCREEN_W = streamlit_js_eval(js_expressions="screen.width", key="w")
 IS_MOBILE = bool(SCREEN_W and int(SCREEN_W) < 768)  # Bootstrap’s “md” breakpoint
@@ -323,7 +337,6 @@ def check_password():
 
     if not st.session_state.authenticated:
         st.stop()
-
 
 check_password()
 
