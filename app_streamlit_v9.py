@@ -363,7 +363,7 @@ def check_password():
 
             **Features in Development:**
             - User voice input and dynamic model voice output, like sending and receiving voice messages.
-            - . <br><br>
+            - Memory of earlier sessions & on-the-fly generation of next session developments. <br><br>
 
             ***Safety & Privacy Statement:***
             This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. 
