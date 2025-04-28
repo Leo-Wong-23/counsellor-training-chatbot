@@ -363,7 +363,7 @@ def check_password():
 
             **Features in Development:**
             - User voice input and dynamic model voice output, like sending and receiving voice messages.
-            - Dynamic persona generation, letting the AI generate a persona on the fly. <br><br>
+            - . <br><br>
 
             ***Safety & Privacy Statement:***
             This app is currently in development and serves as a demonstration tool only—it is not intended for real-world counselling or professional use. 
@@ -467,11 +467,17 @@ else:
 
 # 2) Always offer a Scenario picker if that persona has scenarios
 sel_scenario = {}
+sel_scenario_key: str | None = None
 if sel_persona and sel_persona.get("scenarios"):
     scenario_list   = sel_persona["scenarios"]
     scenario_titles = [s["title"] for s in scenario_list]
-    sel_title = st.sidebar.selectbox("Select a Scenario:", scenario_titles, key="scenario_select")
-    sel_scenario = next(s for s in scenario_list if s["title"] == sel_title)
+    # note: we capture the selection into sel_scenario_key
+    sel_scenario_key = st.sidebar.selectbox(
+        "Select a Scenario:",
+        scenario_titles,
+        key="scenario_select"
+    )
+    sel_scenario = next(s for s in scenario_list if s["title"] == sel_scenario_key)
 
 # Sidebar utility button (clears conversation & evaluation) -----------
 if st.sidebar.button("Clear Conversation & Evaluation"):
@@ -483,21 +489,25 @@ if st.sidebar.button("Clear Conversation & Evaluation"):
     st.rerun()
 
 # ── automatic reset when either one changes ---------------------------
-if "active_persona_key"   not in st.session_state: st.session_state.active_persona_key   = sel_persona_key
-if "active_scenario_key"  not in st.session_state: st.session_state.active_scenario_key  = sel_title
+# initialize on first run
+if "active_persona_key"   not in st.session_state:
+    st.session_state.active_persona_key   = sel_persona_key
+if "active_scenario_key"  not in st.session_state:
+    st.session_state.active_scenario_key  = sel_scenario_key
 
+# if either the persona *or* the scenario key changed, clear the tree
 if (
-    sel_persona_key      != st.session_state.active_persona_key or
-    sel_title   != st.session_state.active_scenario_key
+    sel_persona_key   != st.session_state.active_persona_key
+    or sel_scenario_key != st.session_state.active_scenario_key
 ):
-    # persona *or* scenario changed → start a fresh session
-    st.session_state.conv_tree                       = ConvTree()
-    st.session_state.pending_user_node_id            = None
-    st.session_state.evaluation_feedback             = {}
+    st.session_state.conv_tree                        = ConvTree()
+    st.session_state.pending_user_node_id             = None
+    st.session_state.evaluation_feedback              = {}
     st.session_state.evaluation_assistant_conversation = {}
-    st.session_state.evaluation_transcript           = {}
-    st.session_state.active_persona_key              = sel_persona_key
-    st.session_state.active_scenario_key             = sel_title
+    st.session_state.evaluation_transcript            = {}
+    # propagate the new “active” values
+    st.session_state.active_persona_key   = sel_persona_key
+    st.session_state.active_scenario_key  = sel_scenario_key
     st.rerun()
 
 
@@ -537,6 +547,8 @@ with tab_persona:
                 "cultural_background",
             ]:
                 st.markdown(f"**{k.replace('_', ' ').title()}:** {sel_persona[k]}")
+
+            st.markdown("**Below are the scenarios generated. Please select one from the side bar.**")
 
             # list scenarios if present
             if sel_persona.get("scenarios"):
