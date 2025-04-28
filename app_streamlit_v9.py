@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Literal, Optional
+
 import pandas as pd
-
 import streamlit as st
-from streamlit_js_eval import streamlit_js_eval
-
 from dotenv import load_dotenv
 from openai import OpenAI
+from streamlit_js_eval import streamlit_js_eval
 
 
 # -----------------------------------------------------------------------------
@@ -133,6 +133,49 @@ def load_personas():
         return json.load(f)
 
 
+def generate_unique_persona(api_key: str, examples: dict) -> dict:
+    """Create a brand‑new persona using GPT‑4.1‑mini + JSON mode."""
+    # take two random examples to ground the model
+    sample_examples = random.sample(list(examples.values()), k=2)
+
+    prompt = (
+        "You are generating a **new** counselling‑client persona for a training application. "
+        "Return **only** valid JSON that matches the schema showcased in the examples. "
+        "Do NOT reuse any specific names, background details or scenarios from the examples."
+        "\n\n### Examples (for structure only)\n" +
+        "\n".join([json.dumps(p, indent=2) for p in sample_examples]) +
+        "\n\n### Now generate ONE **unique** persona JSON:"
+    )
+
+    llm = OpenAI(api_key=api_key)
+    resp = llm.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "system", "content": prompt}],
+        response_format={"type": "json_object"},
+        max_tokens=1200,
+        temperature=1,
+    )
+
+    persona_json = resp.choices[0].message.content
+    return json.loads(persona_json)
+
+
+def build_persona_summary(personas: dict) -> pd.DataFrame:
+    """Return a quick-look table that always mirrors the JSON file."""
+    return pd.DataFrame(
+        [
+            {
+                "ID": key.replace("_", " ").title(),
+                "Age": p["age"],
+                "Gender": p["gender"],
+                "Occupation": p["occupation"],
+                "Main Issue": p["main_issue"],
+            }
+            for key, p in personas.items()
+        ]
+    )
+
+
 def build_system_message(persona, scenario=None):
     base_prompt = f"""
     You are a simulated client in a counselling session.
@@ -188,7 +231,7 @@ def get_ai_response(conv_tree: ConvTree, pending_user_node_id: str, persona, sce
 
 
 # -------------------------------------------------------------------------
-# 2 · Evaluation helpers  (NEW)
+# 2 · Evaluation helpers
 # -------------------------------------------------------------------------
 SUPERVISOR_PROMPT = """
 You are a clinical supervisor providing feedback to a trainee counsellor (role: user) based on a session transcript
@@ -247,7 +290,6 @@ def supervisor_chat(api_key: str,
 # -----------------------------------------------------------------------------
 # 3.  Streamlit UI
 # -----------------------------------------------------------------------------
-
 st.set_page_config(page_title="Counsellor Training Chatbot", layout="wide")
 
 st.markdown(
@@ -352,6 +394,9 @@ check_password()
 if "conv_tree" not in st.session_state:
     st.session_state.conv_tree = ConvTree()
 
+if "generated_persona" not in st.session_state:
+    st.session_state.generated_persona = None
+
 # legacy migration support (in case a previous flat history exists)
 if "conversation_history" in st.session_state and st.session_state.conversation_history:
     st.session_state.conv_tree = ConvTree.from_flat_history(
@@ -376,60 +421,83 @@ if "evaluation_assistant_conversation" not in st.session_state:
     st.session_state.evaluation_assistant_conversation = {}
 if "evaluation_transcript" not in st.session_state: st.session_state.evaluation_transcript = {}
 
+
 # ------------------ 3.3  Sidebar (persona & scenario) ------------------
+
 all_personas = load_personas()
 
-def build_persona_summary(personas: dict) -> pd.DataFrame:
-    """Return a quick-look table that always mirrors the JSON file."""
-    return pd.DataFrame(
-        [
-            {
-                "ID": key.replace("_", " ").title(),
-                "Age": p["age"],
-                "Gender": p["gender"],
-                "Occupation": p["occupation"],
-                "Main Issue": p["main_issue"],
-            }
-            for key, p in personas.items()
-        ]
-    )
-
-# --- 1 · options list -------------------------------------------------
-persona_keys = list(all_personas.keys()) + ["__summary__"]   # ⬅︎ append sentinel
+# 1 · option keys (append summary & generator sentinels) ---------------
+persona_keys = list(all_personas.keys()) + ["__summary__", "__generate__"]
 
 st.sidebar.header("Session Setup")
 sel_persona_key = st.sidebar.selectbox(
     "Select a Persona:",
     persona_keys,
     index=0,
-    format_func=lambda k: "*Persona Summary List*" if k == "__summary__"
-                         else k.replace("_", " ").title(),
+    key="persona_select", 
+    format_func=lambda k: (
+        "*Persona Summary List*" if k == "__summary__" else (
+            "*Generate Unique Persona*" if k == "__generate__" else k.replace("_", " ").title()
+        )
+    ),
 )
 
-# --- 2 · if the summary view is chosen, render & stop -----------------
+# Branch 1  ── Summary list -------------------------------------------
 if sel_persona_key == "__summary__":
     st.title("Persona Summary List")
-    st.dataframe(build_persona_summary(all_personas), use_container_width=True)
-    st.stop()                          # ⬅︎ prevents the chat-UI code from running
+    df = pd.DataFrame([
+        {
+            "ID": key.replace("_", " ").title(),
+            "Age": p["age"],
+            "Gender": p["gender"],
+            "Occupation": p["occupation"],
+            "Main Issue": p["main_issue"],
+        }
+        for key, p in all_personas.items()
+    ])
+    st.dataframe(df, use_container_width=True)
+    st.stop()
 
-# --- 3 · normal (single-persona) branch -------------------------------
-sel_persona = all_personas[sel_persona_key]
+# Branch 2  ── Generator option ---------------------------------------
+# 1) Figure out which persona we’re using
+if sel_persona_key == "__generate__":
+    sel_persona = st.session_state.generated_persona
+else:
+    sel_persona = all_personas[sel_persona_key]
 
-scenario_list   = sel_persona.get("scenarios", [])
-scenario_titles = [s["title"] for s in scenario_list]
-
+# 2) Always offer a Scenario picker if that persona has scenarios
 sel_scenario = {}
-if scenario_titles:
-    sel_title    = st.sidebar.selectbox("Select a Scenario:", scenario_titles)
+if sel_persona and sel_persona.get("scenarios"):
+    scenario_list   = sel_persona["scenarios"]
+    scenario_titles = [s["title"] for s in scenario_list]
+    sel_title = st.sidebar.selectbox("Select a Scenario:", scenario_titles, key="scenario_select")
     sel_scenario = next(s for s in scenario_list if s["title"] == sel_title)
 
+# Sidebar utility button (clears conversation & evaluation) -----------
 if st.sidebar.button("Clear Conversation & Evaluation"):
     st.session_state.conv_tree = ConvTree()
-    st.session_state.editing_msg_id = None
-    st.session_state.editing_content = ""
     st.session_state.pending_user_node_id = None
     st.session_state.evaluation_feedback = {}
     st.session_state.evaluation_assistant_conversation = {}
+    st.session_state.generated_persona = None
+    st.rerun()
+
+# ── automatic reset when either one changes ---------------------------
+if "active_persona_key"   not in st.session_state: st.session_state.active_persona_key   = sel_persona_key
+if "active_scenario_key"  not in st.session_state: st.session_state.active_scenario_key  = sel_title
+
+if (
+    sel_persona_key      != st.session_state.active_persona_key or
+    sel_title   != st.session_state.active_scenario_key
+):
+    # persona *or* scenario changed → start a fresh session
+    st.session_state.conv_tree                       = ConvTree()
+    st.session_state.pending_user_node_id            = None
+    st.session_state.evaluation_feedback             = {}
+    st.session_state.evaluation_assistant_conversation = {}
+    st.session_state.evaluation_transcript           = {}
+    st.session_state.active_persona_key              = sel_persona_key
+    st.session_state.active_scenario_key             = sel_title
     st.rerun()
 
 
@@ -442,17 +510,74 @@ tab_persona, tab_chat, tab_eval = st.tabs([
 ])
 
 
-# --------------- TAB 1: Persona Info ---------------
+# TAB 1  ── Persona Info ----------------------------------------------
 with tab_persona:
-    st.subheader("Persona Details")
-    for k in ["name", "age", "gender", "occupation", "main_issue", "background", "cultural_background"]:
-        st.markdown(f"**{k.replace('_', ' ').title()}:** {sel_persona[k]}")
-    if sel_scenario:
-        st.write("---")
-        st.markdown(f"**Scenario: {sel_scenario['title']}**")
-        st.markdown(f"- **Emotional State:** {sel_scenario.get('emotional_state', '')}")
-        st.markdown(f"- **Context:** {sel_scenario.get('contextual_details', '')}")
-        st.markdown(f"- **Session Goal:** {sel_scenario.get('session_goal', '')}")
+    if sel_persona_key == "__generate__":
+        if sel_persona is None:
+            if st.button("Generate Persona"):
+                with st.spinner("Generating persona…"):
+                    try:
+                        new_p = generate_unique_persona(API_KEY, all_personas)
+                    except Exception as e:
+                        st.error(f"Generation failed: {e}")
+                        st.stop()
+
+                st.session_state.generated_persona = new_p
+                st.rerun()
+            st.stop()
+        else:
+            st.subheader("Generated Persona Details")
+            for k in [
+                "name",
+                "age",
+                "gender",
+                "occupation",
+                "main_issue",
+                "background",
+                "cultural_background",
+            ]:
+                st.markdown(f"**{k.replace('_', ' ').title()}:** {sel_persona[k]}")
+
+            # list scenarios if present
+            if sel_persona.get("scenarios"):
+                st.write("---")
+                for sc in sel_persona["scenarios"]:
+                    st.markdown(f"**Scenario: {sc['title']}**")
+                    st.markdown(f"- **Emotional State:** {sc['emotional_state']}")
+                    st.markdown(f"- **Context:** {sc['contextual_details']}")
+                    st.markdown(f"- **Session Goal:** {sc['session_goal']}")
+                    st.markdown("---")
+
+            if st.button("Clear Generated Persona"):
+                st.session_state.generated_persona = None
+                st.session_state.conv_tree = ConvTree()
+                st.rerun()
+    else:
+        st.subheader("Persona Details")
+        for k in [
+            "name",
+            "age",
+            "gender",
+            "occupation",
+            "main_issue",
+            "background",
+            "cultural_background",
+        ]:
+            st.markdown(f"**{k.replace('_', ' ').title()}:** {sel_persona[k]}")
+        if sel_scenario:
+            st.write("---")
+            st.markdown(f"**Scenario: {sel_scenario['title']}**")
+            st.markdown(f"- **Emotional State:** {sel_scenario.get('emotional_state', '')}")
+            st.markdown(f"- **Context:** {sel_scenario.get('contextual_details', '')}")
+            st.markdown(f"- **Session Goal:** {sel_scenario.get('session_goal', '')}")
+
+# Helper to prevent chat tab usage without a persona ------------------
+if sel_persona is None:
+    with tab_chat:
+        st.info("Please generate a persona first in the *Persona Info* tab.")
+    with tab_eval:
+        st.info("No persona generated yet.")
+    st.stop()
 
 
 # ---------------------------------------------------------------------------
