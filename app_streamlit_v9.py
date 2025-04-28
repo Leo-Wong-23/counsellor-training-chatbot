@@ -6,6 +6,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Literal, Optional
+import pandas as pd
 
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
@@ -128,7 +129,7 @@ client = OpenAI(api_key=API_KEY)
 # -----------------------------------------------------------------------------
 
 def load_personas():
-    with open("personas_v2.json", "r") as f:
+    with open("personas_v3.json", "r") as f:
         return json.load(f)
 
 
@@ -142,8 +143,13 @@ def build_system_message(persona, scenario=None):
     """.strip()
 
     if scenario:
-        base_prompt += f"\n\nCurrent emotional state: {scenario.get('emotional_state', 'Not specified')}."
-        base_prompt += f"\nAdditional context: {scenario.get('contextual_details', 'No extra details provided')}."
+        base_prompt += (
+            f"\n\nScenario: {scenario.get('title', 'Unnamed')}."
+            f"\nCurrent emotional state: {scenario.get('emotional_state', 'Not specified')}."
+            f"\nContext: {scenario.get('contextual_details', 'No extra details provided')}."
+            f"\nSession goal: {scenario.get('session_goal', 'No session goal specified')}."
+        )
+
 
     base_prompt += """
     - You should express emotions in a natural way, sometimes hesitating or showing self-doubt.
@@ -209,7 +215,7 @@ def initial_evaluation(api_key: str, counselling_history: list[dict]) -> tuple[s
 
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         messages=[
             {"role": "system", "content": SUPERVISOR_PROMPT},
             {"role": "user",   "content": transcript},
@@ -226,7 +232,7 @@ def supervisor_chat(api_key: str,
                     chat_history: list[dict]) -> str:
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         messages=[
             {"role": "system", "content": SUPERVISOR_PROMPT},
             {"role": "user",   "content": transcript},   # 〈NEW〉 keeps context
@@ -371,19 +377,50 @@ if "evaluation_assistant_conversation" not in st.session_state:
 if "evaluation_transcript" not in st.session_state: st.session_state.evaluation_transcript = {}
 
 # ------------------ 3.3  Sidebar (persona & scenario) ------------------
-
 all_personas = load_personas()
-persona_keys = list(all_personas.keys())
+
+def build_persona_summary(personas: dict) -> pd.DataFrame:
+    """Return a quick-look table that always mirrors the JSON file."""
+    return pd.DataFrame(
+        [
+            {
+                "ID": key.replace("_", " ").title(),
+                "Age": p["age"],
+                "Gender": p["gender"],
+                "Occupation": p["occupation"],
+                "Main Issue": p["main_issue"],
+            }
+            for key, p in personas.items()
+        ]
+    )
+
+# --- 1 · options list -------------------------------------------------
+persona_keys = list(all_personas.keys()) + ["__summary__"]   # ⬅︎ append sentinel
 
 st.sidebar.header("Session Setup")
-sel_persona_key = st.sidebar.selectbox("Select a Persona:", persona_keys, index=0)
+sel_persona_key = st.sidebar.selectbox(
+    "Select a Persona:",
+    persona_keys,
+    index=0,
+    format_func=lambda k: "*Persona Summary List*" if k == "__summary__"
+                         else k.replace("_", " ").title(),
+)
+
+# --- 2 · if the summary view is chosen, render & stop -----------------
+if sel_persona_key == "__summary__":
+    st.title("Persona Summary List")
+    st.dataframe(build_persona_summary(all_personas), use_container_width=True)
+    st.stop()                          # ⬅︎ prevents the chat-UI code from running
+
+# --- 3 · normal (single-persona) branch -------------------------------
 sel_persona = all_personas[sel_persona_key]
 
-scenario_list = sel_persona.get("scenarios", [])
+scenario_list   = sel_persona.get("scenarios", [])
 scenario_titles = [s["title"] for s in scenario_list]
+
 sel_scenario = {}
 if scenario_titles:
-    sel_title = st.sidebar.selectbox("Select a Scenario:", scenario_titles)
+    sel_title    = st.sidebar.selectbox("Select a Scenario:", scenario_titles)
     sel_scenario = next(s for s in scenario_list if s["title"] == sel_title)
 
 if st.sidebar.button("Clear Conversation & Evaluation"):
@@ -415,6 +452,7 @@ with tab_persona:
         st.markdown(f"**Scenario: {sel_scenario['title']}**")
         st.markdown(f"- **Emotional State:** {sel_scenario.get('emotional_state', '')}")
         st.markdown(f"- **Context:** {sel_scenario.get('contextual_details', '')}")
+        st.markdown(f"- **Session Goal:** {sel_scenario.get('session_goal', '')}")
 
 
 # ---------------------------------------------------------------------------
