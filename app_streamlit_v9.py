@@ -358,8 +358,10 @@ def check_password():
             This is a proof-of-concept application to explore how AI can bring service innovations and optimisations to the field of psychology. This app is designed to support psychology trainees in developing effective counselling skills through simulated counsellor-client interactions.<br><br>
 
             **Key Features:**
-            - Engage in real-time conversations with realistic client personas experiencing diverse psychological challenges (in the Counselling Session tab).
-            - Receive personalized feedback to enhance counselling techniques, with interactive discussions for deeper understanding (in the Session Evaluation tab).<br><br>
+            - Real-time conversations with AI-simulated clients experiencing diverse psychological challenges.
+            - Rersonalised interactive feedback from evaluation assistant AI.
+            - Modify and edit messages to explore different conversation paths.
+            - Dynamic generation of new personas and scenarios.<br><br>
 
             **Features in Development:**
             - User voice input and dynamic model voice output, like sending and receiving voice messages.
