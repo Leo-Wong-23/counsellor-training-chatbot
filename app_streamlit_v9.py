@@ -5,7 +5,7 @@ import os
 import random
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Literal, Optional
 
 import pandas as pd
@@ -25,7 +25,8 @@ class MsgNode:
     role: Literal["user", "assistant", "system"]
     content: str
     parent_id: Optional[str]
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    # created_at: datetime = field(default_factory=datetime.utcnow)
 
 
 class ConvTree:
