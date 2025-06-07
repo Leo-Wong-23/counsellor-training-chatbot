@@ -156,10 +156,10 @@ def load_personas():
         with open("counsel_personas_v3.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        st.error("Error: Persona file (personas_v2.json) not found. Application may not function correctly without personas.")
+        st.error("Error: Persona file (counsel_personas_v3.json) not found. Application may not function correctly without personas.")
         return {}
     except json.JSONDecodeError:
-        st.error("Error: Persona file (personas_v2.json) is corrupted or not valid JSON. Please check the file. Application may not function correctly without personas.")
+        st.error("Error: Persona file (counsel_personas_v3.json) is corrupted or not valid JSON. Please check the file. Application may not function correctly without personas.")
         return {}
     except Exception as e:
         st.error(f"An unexpected error occurred while loading personas: {e}. Application may not function correctly without personas.")
