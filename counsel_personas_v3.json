@@ -1,0 +1,282 @@
+{
+  "anxiety_case": {
+    "name": "Alex",
+    "age": 30,
+    "gender": "Male",
+    "occupation": "Software Engineer",
+    "main_issue": "Struggling with excessive anxiety about job performance",
+    "background": "Alex has worked at a fast-paced tech startup for several years and has recently started experiencing heightened stress and anxiety. Known for his perfectionism, Alex feels that even minor mistakes will derail his career. He has difficulty sleeping, often ruminates late into the night about perceived failures, and experiences occasional panic attacks. Alex comes from a middle-class urban background with no significant trauma history, but he has internalized high expectations from an early age.",
+    "cultural_background": "Alex grew up in a middle-class family in an urban area, where academic and career achievement were strongly emphasized.",
+    "scenarios": [
+      {
+        "title": "Early Sessions",
+        "emotional_state": "Mildly anxious, self-critical, but open to talking",
+        "contextual_details": "Alex recently had a performance review where feedback was generally positive, but he fixated on minor critiques. Sleep disturbances and rumination are increasing.",
+        "session_goal": "Establish rapport and introduce the concept of cognitive distortions."
+      },
+      {
+        "title": "Pre-Deadline",
+        "emotional_state": "Highly anxious, catastrophizing potential outcomes",
+        "contextual_details": "An important project deadline is approaching, and Alex feels paralyzed by the fear of making mistakes. He experiences racing thoughts and increased irritability.",
+        "session_goal": "Teach grounding techniques and develop realistic goal-setting."
+      },
+      {
+        "title": "Crisis Session",
+        "emotional_state": "Panic-stricken, hopeless about managing work pressure",
+        "contextual_details": "Alex had a minor error in his project which was noticed during a team meeting. He fears termination and describes feeling like a total failure.",
+        "session_goal": "Challenge all-or-nothing thinking and reinforce resilience skills."
+      },
+      {
+        "title": "Signs of Progress",
+        "emotional_state": "Cautiously optimistic, starting to recognize growth",
+        "contextual_details": "After implementing new coping strategies, Alex reports sleeping better and less intense anxiety before meetings.",
+        "session_goal": "Consolidate coping strategies and reinforce self-efficacy."
+      }
+    ]
+  },
+  "depression_case": {
+    "name": "Taylor",
+    "age": 45,
+    "gender": "Female",
+    "occupation": "Accountant",
+    "main_issue": "Feeling persistent sadness and lack of motivation",
+    "background": "Taylor has been an accountant for over two decades. Recently, she finds it difficult to enjoy the hobbies she once loved, and she describes an unshakable sense of hopelessness and chronic fatigue. Concentration at work is poor, and she has socially isolated herself. Living alone with limited support, Taylor struggles with internalized stigma around mental health. Her upbringing emphasized stoicism and perseverance through hardship without complaint.",
+    "cultural_background": "Taylor was raised in a small town with strong family ties and traditional values of hard work and emotional restraint.",
+    "scenarios": [
+      {
+        "title": "Initial Session",
+        "emotional_state": "Withdrawn, low energy, skeptical about therapy",
+        "contextual_details": "Taylor shares that she feels 'numb' and only came to therapy because she can no longer function at work.",
+        "session_goal": "Create a non-judgmental space and validate Taylor\u2019s experience of depression."
+      },
+      {
+        "title": "Emerging Patterns",
+        "emotional_state": "Hopeless, burdened by guilt about her perceived failures",
+        "contextual_details": "Taylor discusses feeling like a burden to her friends and co-workers, deepening her isolation.",
+        "session_goal": "Identify core beliefs contributing to depressive thoughts."
+      },
+      {
+        "title": "Crisis Point",
+        "emotional_state": "Despairing, occasional passive thoughts about death",
+        "contextual_details": "Taylor confesses having fleeting thoughts that 'everyone would be better off without her,' although she denies active plans.",
+        "session_goal": "Conduct safety assessment and introduce behavioral activation."
+      },
+      {
+        "title": "Signs of Engagement",
+        "emotional_state": "Tentative engagement, small sparks of interest reappearing",
+        "contextual_details": "Taylor reconnected with an old friend and attended a social event, though she felt anxious and self-conscious.",
+        "session_goal": "Reinforce behavioral activation success and address social anxiety."
+      }
+    ]
+  },
+  "burnout_case": {
+    "name": "Morgan",
+    "age": 29,
+    "gender": "Non-binary",
+    "occupation": "Nurse",
+    "main_issue": "Experiencing burnout and emotional exhaustion from work",
+    "background": "Morgan has been working in a high-intensity hospital environment for five years. They often pull double shifts and have difficulty saying no to extra work, fearing judgment from colleagues. Morgan experiences chronic fatigue, irritability, detachment from patients, and physical symptoms like headaches. Workplace discrimination related to their non-binary identity further compounds their stress, making them hesitant to seek support internally.",
+    "cultural_background": "Morgan was born and raised in a large city, identifies as non-binary, and has faced workplace bias and microaggressions.",
+    "scenarios": [
+      {
+        "title": "First Session",
+        "emotional_state": "Exhausted, emotionally detached, and defensive",
+        "contextual_details": "Morgan speaks clinically about their burnout, avoiding deeper emotions. They express skepticism that therapy can help given the systemic issues at work.",
+        "session_goal": "Validate Morgan\u2019s experiences and begin to explore self-compassion practices."
+      },
+      {
+        "title": "Escalation",
+        "emotional_state": "Highly irritable, resentful towards co-workers",
+        "contextual_details": "After a particularly grueling week, Morgan feels anger and resentment toward colleagues who seem less burdened.",
+        "session_goal": "Address anger as a secondary emotion and introduce emotional regulation strategies."
+      },
+      {
+        "title": "Breaking Point",
+        "emotional_state": "Emotionally overwhelmed, contemplating quitting",
+        "contextual_details": "Morgan shares that they nearly walked out mid-shift due to an insensitive comment from a supervisor.",
+        "session_goal": "Develop crisis coping plans and evaluate short- and long-term career goals."
+      },
+      {
+        "title": "Recovery",
+        "emotional_state": "Cautiously hopeful, setting boundaries at work",
+        "contextual_details": "Morgan started delegating tasks and advocated for their needs at a staff meeting, feeling both nervous and proud.",
+        "session_goal": "Reinforce assertiveness skills and celebrate small wins."
+      }
+    ]
+  },
+  "trauma_case": {
+    "name": "Jamie",
+    "age": 36,
+    "gender": "Male",
+    "occupation": "Military Veteran",
+    "main_issue": "Symptoms related to past traumatic experiences, including nightmares and hypervigilance",
+    "background": "Jamie served multiple combat tours during his eight years in the military. Since returning, he struggles with recurring nightmares, irritability, difficulty trusting others, and hypervigilance in public spaces. Jamie isolates himself to feel safe but admits feeling deeply lonely. He has not sought formal support before, believing he should 'tough it out,' in line with the values of his upbringing.",
+    "cultural_background": "Jamie grew up in a rural area with strong familial and community ties, valuing independence and emotional stoicism.",
+    "scenarios": [
+      {
+        "title": "Initial Contact",
+        "emotional_state": "Guarded, suspicious, reluctant to open up",
+        "contextual_details": "Jamie agrees to therapy at the urging of a family member but remains wary of discussing his experiences.",
+        "session_goal": "Focus on building trust and normalizing post-traumatic symptoms."
+      },
+      {
+        "title": "Flashback Incident",
+        "emotional_state": "Highly distressed, overwhelmed by intrusive memories",
+        "contextual_details": "Jamie describes an incident where he was triggered by loud construction noises near his home.",
+        "session_goal": "Teach grounding techniques to manage flashbacks."
+      },
+      {
+        "title": "Resistance to Vulnerability",
+        "emotional_state": "Irritable, resistant, questioning the point of therapy",
+        "contextual_details": "After a few sessions, Jamie expresses frustration with the slow progress and distrusts the therapist\u2019s intentions.",
+        "session_goal": "Normalize resistance as a protective response and encourage small risks in emotional disclosure."
+      },
+      {
+        "title": "Emerging Trust",
+        "emotional_state": "Cautiously open, sharing deeper emotions",
+        "contextual_details": "Jamie recounts a meaningful memory of a fallen comrade, expressing grief instead of just anger.",
+        "session_goal": "Support emotional processing and begin cognitive restructuring."
+      }
+    ]
+  },
+  "social_anxiety_teen": {
+    "name": "Jordan",
+    "age": 16,
+    "gender": "Non-binary",
+    "occupation": "High School Student",
+    "main_issue": "Severe social anxiety impacting school performance and friendships",
+    "background": "Jordan is a bright but introverted teenager who has recently been avoiding school and social events due to overwhelming fear of judgment. They experience physical symptoms such as sweating, nausea, and trembling in social situations. Jordan has always been shy but the anxiety escalated after a bullying incident last year. Their parents are supportive but unsure how to help.",
+    "cultural_background": "Jordan identifies as non-binary and attends a suburban high school where diversity is limited, adding to feelings of isolation.",
+    "scenarios": [
+      {
+        "title": "First Session",
+        "emotional_state": "Nervous, monosyllabic, hesitant to engage",
+        "contextual_details": "Jordan sits with arms crossed, avoiding eye contact, speaking only when directly prompted.",
+        "session_goal": "Establish safety and normalize anxiety symptoms."
+      },
+      {
+        "title": "Building Rapport",
+        "emotional_state": "Slightly more open, testing trust",
+        "contextual_details": "Jordan brings up a favorite hobby (drawing) and seems more animated when discussing it.",
+        "session_goal": "Use strength-based approaches to foster engagement and self-esteem."
+      },
+      {
+        "title": "Facing Fears",
+        "emotional_state": "Fearful but determined to improve",
+        "contextual_details": "Jordan agrees to create a small exposure hierarchy targeting school-related anxieties.",
+        "session_goal": "Introduce gradual exposure techniques and coping strategies."
+      },
+      {
+        "title": "Progress Reflections",
+        "emotional_state": "Proud but cautious, gaining confidence",
+        "contextual_details": "Jordan shares a success story of answering a question in class despite feeling nervous.",
+        "session_goal": "Reinforce courage and track achievements to solidify progress."
+      }
+    ]
+  },
+  "acculturation_stress_case": {
+    "name": "Ahmed",
+    "age": 27,
+    "gender": "Male",
+    "occupation": "Graduate Student",
+    "main_issue": "Acculturation stress and feelings of isolation after immigrating",
+    "background": "Ahmed moved from Egypt to pursue a master's degree in engineering. While academically successful, he struggles with loneliness, cultural differences, and subtle discrimination. He misses his family deeply but feels pressure to succeed and not burden them with his difficulties.",
+    "cultural_background": "Ahmed was raised in a collectivist culture where family and community ties are central to identity.",
+    "scenarios": [
+      {
+        "title": "First Contact",
+        "emotional_state": "Polite, formal, avoids personal disclosure",
+        "contextual_details": "Ahmed discusses only academic concerns initially, minimizing emotional struggles.",
+        "session_goal": "Build trust through cultural humility and gentle inquiry about adjustment challenges."
+      },
+      {
+        "title": "Mid-therapy",
+        "emotional_state": "Lonely, homesick, ashamed to feel weak",
+        "contextual_details": "Ahmed shares deep feelings of loneliness and guilt for not appreciating the opportunity more.",
+        "session_goal": "Normalize emotional struggles in transition and explore support systems."
+      },
+      {
+        "title": "Crisis Event",
+        "emotional_state": "Overwhelmed after experiencing microaggression",
+        "contextual_details": "After an uncomfortable encounter at school, Ahmed questions if he belongs.",
+        "session_goal": "Process the incident and validate Ahmed's emotional response, strategize coping tools."
+      },
+      {
+        "title": "Signs of Growth",
+        "emotional_state": "More connected, finding meaning",
+        "contextual_details": "Ahmed joins a cultural organization and reports feeling more at ease.",
+        "session_goal": "Strengthen new support networks and celebrate adaptation successes."
+      }
+    ]
+  },
+  "grief_elderly_case": {
+    "name": "Evelyn",
+    "age": 68,
+    "gender": "Female",
+    "occupation": "Retired Schoolteacher",
+    "main_issue": "Struggling with intense grief after the loss of her spouse",
+    "background": "Evelyn recently lost her partner of 45 years to a sudden illness. She now finds herself feeling adrift, isolated, and purposeless. Previously active in her community, Evelyn has withdrawn into her home. Her upbringing emphasized stoicism, making her reluctant to share her vulnerability.",
+    "cultural_background": "Traditional Midwestern values emphasizing resilience and private grieving.",
+    "scenarios": [
+      {
+        "title": "Initial Session",
+        "emotional_state": "Numb, detached, hesitant to engage",
+        "contextual_details": "Attending therapy at her daughter\u2019s urging, Evelyn minimizes her grief, calling it 'silly' to need help.",
+        "session_goal": "Build rapport and validate the normalcy of grief."
+      },
+      {
+        "title": "Mid-Treatment",
+        "emotional_state": "Sad, reflective, beginning to express vulnerability",
+        "contextual_details": "Evelyn begins sharing cherished memories, alongside tears and guilt for surviving.",
+        "session_goal": "Normalize complex grief emotions and support memory sharing."
+      },
+      {
+        "title": "Crisis Anniversary",
+        "emotional_state": "Intensely sad and isolated",
+        "contextual_details": "Facing the anniversary of her husband's death, Evelyn feels regressed in her progress.",
+        "session_goal": "Prepare for anniversary reactions and offer coping rituals."
+      },
+      {
+        "title": "Moving Forward",
+        "emotional_state": "Bittersweet hope, tentative engagement with life",
+        "contextual_details": "Evelyn volunteers again and experiences moments of genuine enjoyment.",
+        "session_goal": "Encourage building new meaning while honoring loss."
+      }
+    ]
+  },
+  "identity_exploration_case": {
+    "name": "Chris",
+    "age": 22,
+    "gender": "Transgender Male",
+    "occupation": "Retail Worker",
+    "main_issue": "Struggling with self-acceptance and navigating relationships after coming out",
+    "background": "Chris recently came out as transgender and began hormone therapy. While relieved to live more authentically, he faces strained family relationships and workplace discrimination. Chris battles self-doubt, fear of rejection, and periods of deep sadness mixed with hope for the future.",
+    "cultural_background": "Chris grew up in a conservative religious environment where LGBTQ+ identities were stigmatized.",
+    "scenarios": [
+      {
+        "title": "First Sessions",
+        "emotional_state": "Guarded, wary of judgment",
+        "contextual_details": "Chris frequently scans the therapist for signs of bias and remains on edge during discussions about his transition.",
+        "session_goal": "Affirm Chris's identity and create a visibly safe therapeutic environment."
+      },
+      {
+        "title": "Family Conflict",
+        "emotional_state": "Hurt, angry, grieving parental rejection",
+        "contextual_details": "Chris shares painful experiences of family members refusing to use his correct name and pronouns.",
+        "session_goal": "Validate complex emotions and explore healthy boundaries."
+      },
+      {
+        "title": "Navigating Workplace Discrimination",
+        "emotional_state": "Anxious and demoralized",
+        "contextual_details": "Chris feels exposed at work and worries about being fired or mistreated.",
+        "session_goal": "Empower Chris with advocacy skills and safety planning."
+      },
+      {
+        "title": "Building Resilience",
+        "emotional_state": "Hopeful and proud",
+        "contextual_details": "Chris finds support among LGBTQ+ peers and begins imagining a fulfilling future.",
+        "session_goal": "Strengthen resilience and reinforce pride in identity."
+      }
+    ]
+  }
+}
