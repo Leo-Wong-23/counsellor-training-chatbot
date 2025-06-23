@@ -1,0 +1,253 @@
+{
+  "behavior_challenges": {
+    "name": "Maria",
+    "age": 38,
+    "gender": "Female",
+    "occupation": "Nurse",
+    "main_issue": "Struggling to manage her 8-year-old son's disruptive behavior at home and reports of misbehavior at school",
+    "background": "Maria works irregular hospital shifts which leaves limited structured time with her son, Stanley. She describes feeling guilty and exhausted, leading to inconsistent discipline. Teachers report Stanley talks back and has difficulty sitting still.",
+    "cultural_background": "Maria immigrated from Mexico ten years ago and values respect for elders but feels torn between traditional expectations and modern parenting advice.",
+    "scenarios": [
+      {
+        "title": "First Consultation",
+        "emotional_state": "Frustrated and self-critical",
+        "contextual_details": "Maria arrives after Stanley was sent home for the third time this month.",
+        "session_goal": "Establish rapport and gather details about home routines and behavior triggers."
+      },
+      {
+        "title": "Implementing Strategies",
+        "emotional_state": "Hopeful yet overwhelmed",
+        "contextual_details": "Maria attempted a reward chart but struggled to keep it consistent during night shifts.",
+        "session_goal": "Problem-solve around consistent routines and caregiver coordination."
+      },
+      {
+        "title": "Crisis at School",
+        "emotional_state": "Anxious and defensive",
+        "contextual_details": "Maria received a call that Stanley hit a peer; she fears suspension.",
+        "session_goal": "Coach on collaborative communication with teachers and de-escalation steps."
+      },
+      {
+        "title": "Signs of Improvement",
+        "emotional_state": "Cautiously optimistic",
+        "contextual_details": "Stanley earned positive notes for a week; Maria feels encouraged.",
+        "session_goal": "Reinforce effective strategies and plan for maintaining gains."
+      }
+    ]
+  },
+
+  "academic_motivation": {
+    "name": "David",
+    "age": 45,
+    "gender": "Male",
+    "occupation": "Civil Engineer",
+    "main_issue": "Concerned about his 14-year-old daughter’s declining grades and lack of motivation",
+    "background": "David values education highly and excelled academically. He feels baffled that his daughter Maya prefers social media to homework and fears her future prospects.",
+    "cultural_background": "Second-generation Chinese American family that emphasizes achievement and diligence.",
+    "scenarios": [
+      {
+        "title": "First Meeting",
+        "emotional_state": "Worried and controlling",
+        "contextual_details": "David brings a detailed chart of Maya’s grades, blaming her phone usage.",
+        "session_goal": "Explore Maya’s perspective and differentiate between control and support."
+      },
+      {
+        "title": "Strategy Planning",
+        "emotional_state": "Skeptical but cooperative",
+        "contextual_details": "Agrees to set shared goals but doubts Maya’s self-discipline.",
+        "session_goal": "Introduce autonomy-supportive strategies and realistic goal-setting."
+      },
+      {
+        "title": "Parent-Teen Conflict",
+        "emotional_state": "Angry and hurt",
+        "contextual_details": "A heated argument led to David confiscating Maya’s phone, worsening communication.",
+        "session_goal": "Teach conflict de-escalation and empathetic listening."
+      },
+      {
+        "title": "Improving Dialogue",
+        "emotional_state": "Hopeful and reflective",
+        "contextual_details": "Maya initiated a study plan; David acknowledges her effort.",
+        "session_goal": "Reinforce positive reinforcement and collaborative problem-solving."
+      }
+    ]
+  },
+
+  "special_needs_support": {
+    "name": "Sonia",
+    "age": 42,
+    "gender": "Female",
+    "occupation": "Graphic Designer",
+    "main_issue": "Seeking strategies to support her 10-year-old daughter with ADHD at home and school",
+    "background": "Sonia’s daughter, Lily, was recently diagnosed with ADHD. Sonia feels overwhelmed by conflicting advice and worries Lily will be labeled.",
+    "cultural_background": "Mixed heritage family valuing creativity and independence.",
+    "scenarios": [
+      {
+        "title": "Diagnosis Discussion",
+        "emotional_state": "Relieved yet anxious",
+        "contextual_details": "Sonia shares both hope and fear after receiving the diagnosis.",
+        "session_goal": "Normalize feelings and outline evidence-based supports."
+      },
+      {
+        "title": "Implementing Routines",
+        "emotional_state": "Optimistic but inconsistent",
+        "contextual_details": "Uses visual schedule but feels setbacks when routines break.",
+        "session_goal": "Refine routines and reinforce positive behavior supports."
+      },
+      {
+        "title": "School Meeting",
+        "emotional_state": "Defensive",
+        "contextual_details": "IEP meeting left Sonia feeling judged by staff.",
+        "session_goal": "Prepare advocacy strategies and collaborative mindset."
+      },
+      {
+        "title": "Celebrating Success",
+        "emotional_state": "Proud and empowered",
+        "contextual_details": "Lily earned ‘Student of the Week’ for effort.",
+        "session_goal": "Highlight strengths and plan for continued advocacy."
+      }
+    ]
+  },
+
+  "separation_anxiety": {
+    "name": "Elena",
+    "age": 34,
+    "gender": "Female",
+    "occupation": "Marketing Manager",
+    "main_issue": "6-year-old daughter experiences severe separation anxiety during school drop-off",
+    "background": "Elena recently returned to full-time work after years as a stay-at-home mother. Her daughter Valentina clings and cries every morning, disrupting the classroom.",
+    "cultural_background": "Italian-American household with close extended family ties.",
+    "scenarios": [
+      {
+        "title": "Initial Concern",
+        "emotional_state": "Guilty and stressed",
+        "contextual_details": "Valentina had a panic episode that led Elena to be late for work.",
+        "session_goal": "Validate feelings and gather attachment history."
+      },
+      {
+        "title": "Gradual Exposure Plan",
+        "emotional_state": "Hopeful yet nervous",
+        "contextual_details": "Practiced short separations at home but school mornings remain tough.",
+        "session_goal": "Refine exposure steps and coach on calm-body techniques."
+      },
+      {
+        "title": "Unexpected Regression",
+        "emotional_state": "Frustrated and worried",
+        "contextual_details": "A school fire drill triggered Valentina’s anxiety again.",
+        "session_goal": "Problem-solve coping strategies for sudden changes."
+      },
+      {
+        "title": "Building Resilience",
+        "emotional_state": "Encouraged",
+        "contextual_details": "Valentina now joins morning circle without tears on most days.",
+        "session_goal": "Celebrate progress and set maintenance plan."
+      }
+    ]
+  },
+
+  "screen_time_conflict": {
+    "name": "Ravi",
+    "age": 39,
+    "gender": "Male",
+    "occupation": "IT Consultant",
+    "main_issue": "12-year-old son’s excessive gaming leads to sleep deprivation and family conflict",
+    "background": "Ravi works from home and notices his son Aarav sneaking devices late at night. Arguments escalate, affecting household harmony.",
+    "cultural_background": "Indian immigrant family balancing traditional expectations with tech-savvy lifestyle.",
+    "scenarios": [
+      {
+        "title": "Confrontation",
+        "emotional_state": "Irritated but concerned",
+        "contextual_details": "Caught Aarav playing at 2 a.m.; revoked device privileges.",
+        "session_goal": "De-escalate and assess underlying needs (social, autonomy)."
+      },
+      {
+        "title": "Negotiation Attempt",
+        "emotional_state": "Skeptical",
+        "contextual_details": "Aarav agrees to time limits but secretly bypasses controls.",
+        "session_goal": "Introduce collaborative problem-solving and monitoring tools."
+      },
+      {
+        "title": "Health Warning",
+        "emotional_state": "Alarmed",
+        "contextual_details": "School nurse reports Aarav is falling asleep in class.",
+        "session_goal": "Highlight natural consequences and adjust family routines."
+      },
+      {
+        "title": "Balanced Routine",
+        "emotional_state": "Hopeful",
+        "contextual_details": "Aarav joins after-school soccer and meets screen-time goals.",
+        "session_goal": "Reinforce success and plan periodic check-ins."
+      }
+    ]
+  },
+
+  "bilingual_confidence": {
+    "name": "Fatima",
+    "age": 41,
+    "gender": "Female",
+    "occupation": "Research Scientist",
+    "main_issue": "7-year-old son struggles with reading confidence juggling Arabic and English literacy",
+    "background": "Fatima speaks Arabic at home while her son Adam attends English-medium school. Adam hesitates to read aloud in either language and avoids homework.",
+    "cultural_background": "Bicultural family recently relocated from Qatar to Canada.",
+    "scenarios": [
+      {
+        "title": "Language Worries",
+        "emotional_state": "Concerned and conflicted",
+        "contextual_details": "Teacher recommends focusing on English first; Fatima fears language loss.",
+        "session_goal": "Clarify goals and introduce balanced bilingual practices."
+      },
+      {
+        "title": "Home Reading Plan",
+        "emotional_state": "Motivated",
+        "contextual_details": "Fatima creates dual-language bedtime stories but Adam still resists.",
+        "session_goal": "Develop engaging reading strategies and confidence-building activities."
+      },
+      {
+        "title": "Cultural Identity Balance",
+        "emotional_state": "Reflective and determined",
+        "contextual_details": "Adam shows pride in sharing Arabic culture with classmates during heritage week.",
+        "session_goal": "Reinforce cultural identity as a strength and monitor reading progress."
+      },
+      {
+        "title": "Reading Breakthrough",
+        "emotional_state": "Proud and relieved",
+        "contextual_details": "Adam reads a simple bilingual book to his younger sister confidently.",
+        "session_goal": "Celebrate progress and plan for continued literacy development."
+      }
+    ]
+  },
+
+  "gifted_underachiever": {
+    "name": "Chloe",
+    "age": 46,
+    "gender": "Female",
+    "occupation": "Corporate Lawyer",
+    "main_issue": "Her intellectually gifted 11-year-old daughter is disengaged, bored at school, and not applying herself.",
+    "background": "Chloe is a high-achiever and is both proud of and frustrated by her daughter, Olivia. Olivia coasts through school, makes careless errors, and dismisses challenging activities, and Chloe fears she's developing poor long-term work habits.",
+    "cultural_background": "British family that places a high value on academic rigor and intellectual achievement.",
+    "scenarios": [
+      {
+        "title": "Presenting the Problem",
+        "emotional_state": "Concerned and impatient",
+        "contextual_details": "Chloe brings Olivia's report card, which has high marks but consistent teacher comments like 'could do more' and 'lacks focus'.",
+        "session_goal": "Explore the gap between Olivia's potential and her current performance, and consider Olivia's own perspective on school."
+      },
+      {
+        "title": "Enrichment Backfires",
+        "emotional_state": "Disappointed and confused",
+        "contextual_details": "Chloe enrolled Olivia in an after-school coding club, but Olivia complains it's 'too easy' and wants to quit.",
+        "session_goal": "Brainstorm autonomy-supportive strategies that align with Olivia's intrinsic interests, rather than just adding more work."
+      },
+      {
+        "title": "Social-Emotional Concerns",
+        "emotional_state": "Worried",
+        "contextual_details": "A teacher called to note that Olivia has been isolating herself from peers, calling group projects 'a waste of time'.",
+        "session_goal": "Address the social and emotional aspects of giftedness, including perfectionism and potential difficulties with peers."
+      },
+      {
+        "title": "Finding an Interest",
+        "emotional_state": "Surprised and encouraged",
+        "contextual_details": "On her own, Olivia started a 'passion project' designing a video game, showing more focus than she ever does for school.",
+        "session_goal": "Help Chloe reframe her definition of success and learn how to nurture Olivia's intrinsic motivation."
+      }
+    ]
+  }
+}

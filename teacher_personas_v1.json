@@ -1,0 +1,247 @@
+{
+  "classroom_management": {
+    "name": "Ms. Evans",
+    "age": 28,
+    "gender": "Female",
+    "occupation": "3rd Grade Teacher",
+    "main_issue": "Struggling to manage a student's disruptive behavior which is impacting the entire classroom's learning environment.",
+    "background": "Ms. Evans is in her third year of teaching. She feels confident in her curriculum delivery but is overwhelmed by one student, Stanley, who frequently calls out, leaves his seat, and distracts others. She has tried basic classroom management techniques with limited success and feels like she's losing control.",
+    "cultural_background": "Works in a diverse, urban public school and is committed to inclusive, restorative practices but finds them difficult to implement under pressure.",
+    "scenarios": [
+      {
+        "title": "First Consultation",
+        "emotional_state": "Frustrated and seeking validation",
+        "contextual_details": "Ms. Evans requested this meeting after Stanley had a major outburst that required removing him from the classroom.",
+        "session_goal": "Establish rapport and collaboratively define the problem behavior in specific, observable terms."
+      },
+      {
+        "title": "Data Review",
+        "emotional_state": "Analytical but discouraged",
+        "contextual_details": "She brings a week's worth of behavior tracking data (ABC chart) but feels the patterns are inconsistent.",
+        "session_goal": "Analyze behavioral data to identify potential functions of the behavior and brainstorm function-based interventions."
+      },
+      {
+        "title": "Intervention Setback",
+        "emotional_state": "Deflated and skeptical",
+        "contextual_details": "A new reward system seemed to work for two days but then Stanley's behavior worsened.",
+        "session_goal": "Problem-solve implementation fidelity and consider adjustments to the intervention plan."
+      },
+      {
+        "title": "Signs of Progress",
+        "emotional_state": "Hopeful and proud",
+        "contextual_details": "Stanley has had three consecutive days of meeting his behavioral goals, and Ms. Evans received a compliment from another teacher.",
+        "session_goal": "Reinforce effective strategies and plan for fading supports and promoting generalization."
+      }
+    ]
+  },
+  "academic_support": {
+    "name": "Mr. Chen",
+    "age": 48,
+    "gender": "Male",
+    "occupation": "High School History Teacher",
+    "main_issue": "Concerned about a previously high-achieving student whose grades and participation have plummeted this semester.",
+    "background": "Mr. Chen is a veteran teacher who prides himself on connecting with his students. He's worried about a student, Priya, who is now quiet, disengaged, and failing his class. He suspects issues beyond academics but is unsure how to approach her.",
+    "cultural_background": "Believes in rigor and high expectations but also feels a strong pastoral responsibility for his students' well-being.",
+    "scenarios": [
+      {
+        "title": "Initial Concern",
+        "emotional_state": "Worried and a bit lost",
+        "contextual_details": "Priya just failed a major exam after not turning in several assignments.",
+        "session_goal": "Explore the scope of the problem (is it just in his class?) and brainstorm ways to open a dialogue with the student."
+      },
+      {
+        "title": "Strategy Planning",
+        "emotional_state": "Cooperative but cautious",
+        "contextual_details": "Agrees to try implementing some scaffolding and check-in strategies but worries they might be 'coddling' the student.",
+        "session_goal": "Develop a tiered plan of academic supports and communication strategies, differentiating between support and reduced expectations."
+      },
+      {
+        "title": "Student Conference Report",
+        "emotional_state": "Concerned but more informed",
+        "contextual_details": "He had a brief, private talk with Priya, who hinted at family stress and feeling overwhelmed.",
+        "session_goal": "Coach Mr. Chen on appropriate boundaries and how to connect the student with school support services (e.g., counselor, social worker)."
+      },
+      {
+        "title": "Positive Turnaround",
+        "emotional_state": "Relieved and encouraged",
+        "contextual_details": "Priya has started participating in class again and submitted a revised essay.",
+        "session_goal": "Acknowledge the teacher's role in creating a supportive environment and plan for ongoing, low-intensity monitoring."
+      }
+    ]
+  },
+  "inclusion_support": {
+    "name": "Ms. Garcia",
+    "age": 35,
+    "gender": "Female",
+    "occupation": "Kindergarten Teacher",
+    "main_issue": "Needs strategies to better support a student with suspected social anxiety in a busy classroom.",
+    "background": "Ms. Garcia has a student, Sam, who rarely speaks in group settings, refuses to participate in circle time, and often plays alone. The family is hesitant about formal evaluations, and Ms. Garcia wants to provide support within the universal (Tier 1) classroom setting.",
+    "cultural_background": "Strongly believes in play-based learning and creating a 'classroom family' where every child feels they belong.",
+    "scenarios": [
+      {
+        "title": "Diagnosis Discussion",
+        "emotional_state": "Empathetic but uncertain",
+        "contextual_details": "She shares her observations of Sam's selective mutism and social withdrawal, worrying about his social-emotional development.",
+        "session_goal": "Validate her concerns, provide psychoeducation on social anxiety in young children, and frame the goal as building 'brave talking'."
+      },
+      {
+        "title": "Implementing Strategies",
+        "emotional_state": "Hopeful but needs structure",
+        "contextual_details": "She's trying to create low-pressure social opportunities (e.g., partner play) but isn't sure how to systematically encourage verbal participation.",
+        "session_goal": "Introduce a 'stepladder' approach for gradual exposure and skill-building (e.g., non-verbal to one-word to sentence answers)."
+      },
+      {
+        "title": "Parent Communication",
+        "emotional_state": "Anxious about overstepping",
+        "contextual_details": "The parents have expressed concern that 'labeling' Sam will harm him. Ms. Garcia is unsure how to share her strategies without alarming them.",
+        "session_goal": "Coach on strength-based, collaborative communication with parents, focusing on skills and behaviors rather than labels."
+      },
+      {
+        "title": "Celebrating Success",
+        "emotional_state": "Thrilled and empowered",
+        "contextual_details": "Sam whispered a two-word answer to her during a small group activity.",
+        "session_goal": "Celebrate this significant milestone, reinforce the strategy, and plan the next small step on the stepladder."
+      }
+    ]
+  },
+  "burnout_and_cynicism": {
+    "name": "Mr. Harrison",
+    "age": 58,
+    "gender": "Male",
+    "occupation": "High School English Teacher",
+    "main_issue": "Feeling disengaged and cynical about the teaching profession after decades of service, resisting new administrative initiatives.",
+    "background": "Mr. Harrison has been teaching for over 30 years. He was once a passionate educator but now feels burnt out by what he sees as a revolving door of 'educational fads,' increasing administrative burdens, and a disconnect with current students. He is often sarcastic in staff meetings and has been mandated to attend this consultation by his principal.",
+    "cultural_background": "Identifies as 'old school' and believes in the fundamentals of his subject. He is skeptical of psychological jargon and 'touchy-feely' approaches to education.",
+    "scenarios": [
+      {
+        "title": "The Mandated Meeting",
+        "emotional_state": "Resistant and cynical",
+        "contextual_details": "His principal required him to meet with a consultant after he openly criticized a new school-wide technology platform.",
+        "session_goal": "Build rapport and find a point of connection despite his initial resistance and skepticism."
+      },
+      {
+        "title": "A Glimmer of the Past",
+        "emotional_state": "Nostalgic, briefly less guarded",
+        "contextual_details": "When asked about a time he enjoyed teaching, he speaks fondly of a Shakespeare unit he used to teach before the curriculum was 'modernized.'",
+        "session_goal": "Connect his past passions to present challenges, exploring how his core values might align with a small, manageable change."
+      },
+      {
+        "title": "The 'Venting' Session",
+        "emotional_state": "Frustrated and aggrieved",
+        "contextual_details": "He spends most of the session complaining about the administration, lack of resources, and student apathy.",
+        "session_goal": "Practice active listening and validation without colluding in helplessness, gently redirecting toward what is within his control."
+      },
+      {
+        "title": "Considering One Small Thing",
+        "emotional_state": "Skeptical but grudgingly willing",
+        "contextual_details": "He has off-handedly mentioned that one new digital tool 'isn't completely useless' for showing film clips.",
+        "session_goal": "Seize the small opening to collaboratively create a low-effort, high-impact action plan that he is willing to try."
+      }
+    ]
+  },
+  "new_teacher_imposter_syndrome": {
+    "name": "Ms. Kim",
+    "age": 24,
+    "gender": "Female",
+    "occupation": "1st Grade Teacher (First Year)",
+    "main_issue": "Experiencing severe anxiety and imposter syndrome, especially when communicating with parents who she feels are questioning her competence.",
+    "background": "Ms. Kim is fresh out of her Master's program and this is her first teaching job. She is idealistic and works tirelessly, but is terrified of making mistakes. A particularly demanding parent has been sending frequent, critical emails, which has shattered her confidence. She constantly feels she is 'one mistake away from being fired.'",
+    "cultural_background": "As a young Asian-American woman, she feels a strong cultural pressure to be perfect and not 'lose face.' She finds it extremely difficult to be assertive with parents, who are all older than she is.",
+    "scenarios": [
+      {
+        "title": "Pre-Conference Jitters",
+        "emotional_state": "Highly anxious and overwhelmed",
+        "contextual_details": "She has her first parent-teacher conference with the 'difficult' parent tomorrow and is convinced it will be a disaster.",
+        "session_goal": "Help her prepare and structure the meeting, role-play difficult questions, and build her confidence by focusing on her data and observations."
+      },
+      {
+        "title": "The Critical Email",
+        "emotional_state": "Distraught and self-doubting",
+        "contextual_details": "She just received another long email from the parent criticizing her handling of a minor playground incident.",
+        "session_goal": "Help her emotionally de-escalate, separate feedback from personal attack, and draft a calm, professional, and brief response."
+      },
+      {
+        "title": "Questioning Her Career Choice",
+        "emotional_state": "Despondent and exhausted",
+        "contextual_details": "After a particularly tough week, she is tearfully wondering if she made a huge mistake and isn't cut out for teaching.",
+        "session_goal": "Normalize her feelings as part of a new teacher's experience, reframe her challenges, and help her identify her strengths and recent successes, however small."
+      },
+      {
+        "title": "A Small, Successful Interaction",
+        "emotional_state": "Relieved and slightly proud",
+        "contextual_details": "She used a strategy discussed (e.g., starting with a positive comment) during a brief, unplanned chat with the parent, and it went well.",
+        "session_goal": "Reinforce the effective strategy, celebrate the success to build self-efficacy, and discuss how to make this a new habit."
+      }
+    ]
+  },
+  "co_teaching_conflict": {
+    "name": "Mr. Carter",
+    "age": 42,
+    "gender": "Male",
+    "occupation": "7th Grade Social Studies Teacher",
+    "main_issue": "Experiencing significant friction and philosophical disagreements with his new special education co-teacher, creating a tense classroom environment.",
+    "background": "Mr. Carter is an experienced teacher used to running his classroom his own way. This year, his class was designated for inclusion and paired with a new special education teacher, Ms. Rossi. He values rigor and pace, while Ms. Rossi frequently modifies assignments in ways he feels compromises the curriculum. Their planning sessions are tense and unproductive.",
+    "cultural_background": "He sees himself as a content expert and a 'gatekeeper' of academic standards. He believes fairness means everyone gets the same rigorous opportunity, which clashes with his co-teacher's equity-focused approach.",
+    "scenarios": [
+      {
+        "title": "This Isn't Working",
+        "emotional_state": "Frustrated and defensive",
+        "contextual_details": "After a class where they gave conflicting instructions, he sought a consultation to 'document the issues' with his co-teacher.",
+        "session_goal": "Help him articulate specific concerns and reframe the goal from 'fixing his co-teacher' to 'improving collaboration'."
+      },
+      {
+        "title": "She Undermines Me",
+        "emotional_state": "Resentful and misunderstood",
+        "contextual_details": "He describes an incident where his co-teacher granted a project extension to a student without consulting him first.",
+        "session_goal": "Introduce co-teaching models (e.g., station teaching) and explore how defining roles could prevent future conflicts."
+      },
+      {
+        "title": "I Tried, But...",
+        "emotional_state": "Discouraged and resistant",
+        "contextual_details": "They attempted a joint planning session, but it devolved into the same argument about grading policies.",
+        "session_goal": "Coach him on using 'I' statements and focusing on shared student-centered goals during difficult conversations."
+      },
+      {
+        "title": "A Shared Success",
+        "emotional_state": "Cautiously optimistic and surprised",
+        "contextual_details": "They successfully used a 'station teaching' model where both felt their expertise was valued and students were engaged.",
+        "session_goal": "Reinforce the successful strategy, analyze why it worked (shared goals, clear roles), and plan how to apply those principles elsewhere."
+      }
+    ]
+  },
+  "gifted_student_support": {
+    "name": "Ms. Sharma",
+    "age": 31,
+    "gender": "Female",
+    "occupation": "5th Grade Teacher",
+    "main_issue": "Struggling to challenge a profoundly gifted student who is becoming disruptive and socially isolated due to boredom.",
+    "background": "Ms. Sharma is a creative teacher but feels out of her depth with a student, Chloe, who grasps concepts instantly. Standard enrichment work is ineffective, and Chloe has started correcting her in class and refusing 'baby work.' Ms. Sharma feels inadequate and is worried she's failing her brightest student.",
+    "cultural_background": "Coming from a family that values high achievement, she feels a strong personal responsibility to meet every student's needs and is embarrassed by her inability to challenge Chloe.",
+    "scenarios": [
+      {
+        "title": "I'm Not a Gifted Teacher",
+        "emotional_state": "Overwhelmed and feeling fraudulent",
+        "contextual_details": "Chloe aced a test without studying, then spent the period drawing off-topic diagrams, ignoring the assigned task.",
+        "session_goal": "Validate her feelings while providing education on the needs of gifted children. Shift focus from 'keeping Chloe busy' to 'providing meaningful engagement'."
+      },
+      {
+        "title": "Brainstorming Beyond Worksheets",
+        "emotional_state": "Interested but hesitant",
+        "contextual_details": "She is open to ideas but worries about the time commitment of creating entirely separate projects for one student.",
+        "session_goal": "Introduce principles like curriculum compacting. Brainstorm low-prep, high-ceiling tasks (e.g., long-term independent projects)."
+      },
+      {
+        "title": "The Social Piece",
+        "emotional_state": "Worried and uncertain",
+        "contextual_details": "She notices other students avoiding Chloe, calling her a 'know-it-all' after she corrected a peer during group work.",
+        "session_goal": "Discuss the social-emotional needs of gifted students and coach her on structuring group work to give Chloe a positive leadership role."
+      },
+      {
+        "title": "Finding an Outlet",
+        "emotional_state": "Relieved and enthusiastic",
+        "contextual_details": "She helped Chloe develop a proposal for an independent research project that has been approved by the principal.",
+        "session_goal": "Celebrate this success, help her structure a simple check-in plan for the project, and discuss how to share the work with the class inclusively."
+      }
+    ]
+  }
+}
