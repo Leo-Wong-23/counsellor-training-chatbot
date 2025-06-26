@@ -53,37 +53,6 @@ APP_CONFIG = {
         "tab2_label": "Counselling Session",
         "download_filename": "counselling_session"
     },
-    "teacher": {
-        "page_title": "Teacher Consultation Training Chatbot",
-        "title": "Teacher Consultation",
-        "persona_file": "teacher_personas_v1.json",
-        "persona_gen_prompt": "You are generating a **new** consultation client persona for a training application. The persona is a teacher seeking consultation from a school psychologist or educational consultant. ",
-        "system_message_prompt": "You are a simulated teacher client in a consultation session with a trainee educational psychologist.",
-        "system_message_details": """
-            - You should express emotions in a natural way, sometimes hesitating or showing self-doubt.
-            - Occasionally shift emotional tone based on the trainee educational psychologist's response (e.g., if they show empathy, express some relief before returning to the core problem).
-            - If relevant, bring up additional concerns beyond the main issue (e.g., lack of school resources, pressure from administration, difficult parent communication).
-            - Avoid being overly structured or sounding like an AI—make your responses sound more like a real teacher talking.
-            """,
-        "eval_prompt": """
-            You are an evaluation assistant providing feedback to a trainee educational psychologist (role: user) based on a session transcript
-            between the trainee and a teacher.
-            Assess the trainee's consultation techniques based on:
-            1. Collaborative Problem Definition
-            2. Empathic & Culturally-Sensitive Communication
-            3. Active, Reflective Listening
-            4. Solution-Focused Questioning & Planning
-            5. Message Clarity & Conversational Flow
-
-            - Provide a concise analysis, with specific conversation details as examples when appropriate, 
-            and suggest 2-3 actionable improvements for the trainee. 
-            - If the trainee asks follow-up questions, answer them concisely with relevant examples.
-            - Maintain a supportive and constructive tone.
-            - Add bold and italic headings for like **1. Collaborative Problem Definition** and *Actionable Improvements:* and use bold and italics for emphasis when necessary.
-            """.strip(),
-        "tab2_label": "Consultation Session",
-        "download_filename": "teacher_consultation_session"
-    },
     "parent": {
         "page_title": "Parent Consultation Training Chatbot",
         "title": "Parent Consultation",
@@ -114,6 +83,37 @@ APP_CONFIG = {
             """.strip(),
         "tab2_label": "Consultation Session",
         "download_filename": "parent_consultation_session"
+    },
+    "teacher": {
+        "page_title": "Teacher Consultation Training Chatbot",
+        "title": "Teacher Consultation",
+        "persona_file": "teacher_personas_v1.json",
+        "persona_gen_prompt": "You are generating a **new** consultation client persona for a training application. The persona is a teacher seeking consultation from a school psychologist or educational consultant. ",
+        "system_message_prompt": "You are a simulated teacher client in a consultation session with a trainee educational psychologist.",
+        "system_message_details": """
+            - You should express emotions in a natural way, sometimes hesitating or showing self-doubt.
+            - Occasionally shift emotional tone based on the trainee educational psychologist's response (e.g., if they show empathy, express some relief before returning to the core problem).
+            - If relevant, bring up additional concerns beyond the main issue (e.g., lack of school resources, pressure from administration, difficult parent communication).
+            - Avoid being overly structured or sounding like an AI—make your responses sound more like a real teacher talking.
+            """,
+        "eval_prompt": """
+            You are an evaluation assistant providing feedback to a trainee educational psychologist (role: user) based on a session transcript
+            between the trainee and a teacher.
+            Assess the trainee's consultation techniques based on:
+            1. Collaborative Problem Definition
+            2. Empathic & Culturally-Sensitive Communication
+            3. Active, Reflective Listening
+            4. Solution-Focused Questioning & Planning
+            5. Message Clarity & Conversational Flow
+
+            - Provide a concise analysis, with specific conversation details as examples when appropriate, 
+            and suggest 2-3 actionable improvements for the trainee. 
+            - If the trainee asks follow-up questions, answer them concisely with relevant examples.
+            - Maintain a supportive and constructive tone.
+            - Add bold and italic headings for like **1. Collaborative Problem Definition** and *Actionable Improvements:* and use bold and italics for emphasis when necessary.
+            """.strip(),
+        "tab2_label": "Consultation Session",
+        "download_filename": "teacher_consultation_session"
     }
 }
 
@@ -222,7 +222,6 @@ else:
 # -----------------------------------------------------------------------------
 # 2a.  Utility functions (personas, system message, prompt)
 # -----------------------------------------------------------------------------
-
 def markdown_to_html(text: str) -> str:
     """Convert basic markdown formatting to HTML for bubble display."""
     if not text:
@@ -312,13 +311,29 @@ def build_persona_summary(personas: dict) -> pd.DataFrame:
 
 
 def build_system_message(persona, scenario, system_message_prompt, system_message_details):
-    base_prompt = f"""
-    {system_message_prompt}
-    Your name is {persona['name']}, you are {persona['age']} years old, and you work as a {persona['occupation']}.
-    Your main issue: {persona['main_issue']}.
-    Background: {persona['background']}.
-    Cultural background: {persona['cultural_background']}.
-    """.strip()
+    # Use .get() for robustness against missing keys in different persona structures
+    name = persona.get('name', 'N/A')
+    age_info = f", you are {persona.get('age')} years old" if persona.get('age') else ""
+    occupation = persona.get('occupation', 'N/A')
+    main_issue = persona.get('main_issue', 'N/A')
+    background = persona.get('background', 'N/A')
+    cultural_background = persona.get('cultural_background', 'N/A')
+
+    # Build the prompt string piece by piece
+    prompt_parts = [
+        system_message_prompt,
+        f"Your name is {name}{age_info}, and you work as a {occupation}."
+    ]
+    if main_issue != 'N/A': # Only add if it exists
+        prompt_parts.append(f"Your main issue: {main_issue}.")
+    
+    prompt_parts.append(f"Background: {background}.")
+    
+    if cultural_background != 'N/A': # Only add if it exists
+        prompt_parts.append(f"Cultural background: {cultural_background}.")
+
+    base_prompt = "\n".join(prompt_parts)
+
 
     if scenario:
         base_prompt += (
@@ -328,14 +343,14 @@ def build_system_message(persona, scenario, system_message_prompt, system_messag
             f"\nSession goal: {scenario.get('session_goal', 'No session goal specified')}."
         )
 
-    base_prompt += "\n" + system_message_details.strip()
+    base_prompt += "\n\n" + system_message_details.strip()
     return base_prompt
 
 
 def build_prompt(conv_tree: ConvTree, system_msg: str) -> List[Dict[str, str]]:
     msgs = [{"role": "system", "content": system_msg}]
     for node in conv_tree.path_to_leaf()[1:]:  # skip root
-        if node.role in {"user", "assistant"}:
+        if node.role == "user" or node.role.startswith("assistant"):
             msgs.append({"role": node.role, "content": node.content})
     return msgs
 
@@ -389,12 +404,73 @@ def get_ai_response(conv_tree: ConvTree,
     return response.text
 
 
+def get_next_speaker(api_key: str, conversation_history: list[dict], last_speaker_role: str, arbiter_prompt_template: str) -> str:
+    """
+    Uses the TurnArbiter prompt to decide who speaks next.
+    conversation_history is a list of {"role": "...", "content": "..."}
+    """
+    if not conversation_history:
+        return "TRAINEE" # Trainee always starts first
+
+    # Format the transcript for the prompt
+    transcript_parts = []
+    for msg in conversation_history:
+        # Map internal roles to human-readable roles for the prompt
+        role_map = {
+            "user": "Trainee",
+            "assistant_teacher": "Teacher",
+            "assistant_parent": "Parent"
+        }
+        speaker = role_map.get(msg['role'], 'Unknown')
+        transcript_parts.append(f"{speaker}: {msg['content']}")
+    
+    transcript = "\n".join(transcript_parts)
+    
+    # Fill the prompt template
+    prompt = arbiter_prompt_template.format(transcript=transcript, last_speaker_role=last_speaker_role.upper())
+
+    try:
+        # Use a simple, non-chat generation call for this
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            generation_config=genai.types.GenerationConfig(temperature=0.0) # We want deterministic output
+        )
+        next_speaker = resp.text.strip().upper()
+        # Validate the output
+        if next_speaker in ["TRAINEE", "TEACHER", "PARENT"]:
+            return next_speaker
+        else:
+            # If the model hallucinates, default to the trainee to prevent getting stuck
+            return "TRAINEE"
+    except Exception as e:
+        st.error(f"Error calling TurnArbiter: {e}")
+        return "TRAINEE" # Default to trainee on error
+
+
 # -------------------------------------------------------------------------
 # 2 · Evaluation helpers
 # -------------------------------------------------------------------------
 
 def initial_evaluation(api_key: str, counselling_history: list[dict], EVALUATION_PROMPT: str) -> tuple[str, str]:
-    transcript_parts = [f"{'Client' if m['role']=='assistant' else 'Trainee'}: {m['content']}" for m in counselling_history]
+    transcript_parts = []
+    sel_persona = st.session_state.get('sel_persona', {})
+
+    for m in counselling_history:
+        role = m['role']
+        content = m['content']
+        speaker = "Unknown"
+        if role == 'user':
+            speaker = "Trainee"
+        elif role == 'assistant': # Single-persona modes
+            speaker = f"Client ({sel_persona.get('name', '')})"
+        elif role == 'assistant_teacher':
+            speaker = f"Teacher ({sel_persona.get('teacher_persona', {}).get('name', '')})"
+        elif role == 'assistant_parent':
+            speaker = f"Parent ({sel_persona.get('parent_persona', {}).get('name', '')})"
+        
+        transcript_parts.append(f"{speaker}: {content}")
+
     transcript = "\\n".join(transcript_parts)
     full_prompt_for_gemini = f"{EVALUATION_PROMPT}\\\\n\\\\nHere is the transcript:\\\\n{transcript}"
 
@@ -432,7 +508,7 @@ def supervisor_chat(api_key: str, transcript: str, chat_history: list[dict], EVA
         return f"Error in supervisor chat: {e}"
 
 # -----------------------------------------------------------------------------
-# 3.  Streamlit UI (HEAVILY MODIFIED)
+# 3.  Streamlit UI
 # -----------------------------------------------------------------------------
 
 # Function to clear all session state on mode switch ---
@@ -446,11 +522,21 @@ def reset_session_state():
     st.session_state.evaluation_feedback = {}
     st.session_state.evaluation_assistant_conversation = {}
     st.session_state.evaluation_transcript = {}
+    st.session_state.next_speaker = "TRAINEE"
     # Reset active keys to force re-evaluation
     if "active_persona_key" in st.session_state:
         del st.session_state.active_persona_key
     if "active_scenario_key" in st.session_state:
         del st.session_state.active_scenario_key
+
+
+def on_mode_change():
+    """Callback to reset state when the mode is switched via the sidebar."""
+    # The new mode is already in st.session_state.app_mode because the radio widget updated it.
+    # We just need to reset the rest of the state.
+    reset_session_state()
+    # Ensure the user stays logged in after the mode switch and associated rerun.
+    st.session_state.authenticated = True
 
 
 # --- Main App Logic Starts Here ---
@@ -518,6 +604,7 @@ def check_password():
 
             **Key Features:**
             - Real-time conversations with AI-simulated clients experiencing diverse challenges.
+            - Four training modes: *Counselling*, *Parent Consultation*, *Teacher Consultation*, and *(Multi-Agent) Conflict Resolution*.
             - Personalised interactive feedback from evaluation assistant AI.
             - Modify and edit messages to explore different conversation paths.
             - Dynamic generation of new personas and scenarios.<br><br>
@@ -531,17 +618,6 @@ def check_password():
             No chat history or personal data are stored beyond the active session; they are erased once you close or refresh the webpage.
             """,
             unsafe_allow_html=True,
-        )
-        
-        # --- Radio button for mode selection ---
-        mode_options = {key: config['title'] for key, config in APP_CONFIG.items()}
-        
-        st.radio(
-            label="**Select a training mode to begin. You can switch modes at any time using the sidebar after login.**",
-            options=list(mode_options.keys()),
-            format_func=lambda key: mode_options[key],
-            key="app_mode",  # This directly controls the app_mode state
-            horizontal=True,
         )
 
         with st.form(key="password_form"):
@@ -568,6 +644,7 @@ if "pending_user_node_id" not in st.session_state: st.session_state.pending_user
 if "evaluation_feedback" not in st.session_state: st.session_state.evaluation_feedback = {}
 if "evaluation_assistant_conversation" not in st.session_state: st.session_state.evaluation_assistant_conversation = {}
 if "evaluation_transcript" not in st.session_state: st.session_state.evaluation_transcript = {}
+if "next_speaker" not in st.session_state: st.session_state.next_speaker = "TRAINEE"
 
 conv_tree: ConvTree = st.session_state.conv_tree  
 
@@ -608,7 +685,7 @@ if sel_persona and sel_persona.get("scenarios"):
     sel_scenario = next((s for s in sel_persona["scenarios"] if s["title"] == sel_scenario_key), {})
 
 # 3) Clear conversation & evaluation button
-if st.sidebar.button("Clear Conversation & Evaluation"):
+if st.sidebar.button("Clear Conversation"):
     reset_session_state()
     st.rerun()
 
@@ -622,30 +699,66 @@ if (sel_persona_key != st.session_state.active_persona_key or sel_scenario_key !
     st.session_state.active_persona_key = sel_persona_key
     st.session_state.active_scenario_key = sel_scenario_key
     st.rerun()
-    
+
+
 # --- Sidebar Mode Switcher ---
 st.sidebar.markdown("---")
-st.sidebar.subheader("Switch Mode")
-other_modes = [mode for mode in APP_CONFIG if mode != st.session_state.app_mode]
-for mode in other_modes:
-    if st.sidebar.button(f"Switch to {APP_CONFIG[mode]['title']}"):
-        st.session_state.app_mode = mode
-        reset_session_state()
-        st.session_state.authenticated = True # Keep user logged in
-        st.rerun()
+st.sidebar.subheader("Switch Training Mode")
 
-# ------------------ 3.4  Tabs (MODIFIED) ------------------
+# Define the options for the radio button
+mode_options = {key: config['title'] for key, config in APP_CONFIG.items()}
+
+# Create the radio button widget
+st.sidebar.radio(
+    "Current Training Mode",
+    options=list(mode_options.keys()),
+    # The format_func makes the labels user-friendly (e.g., "Counselling")
+    format_func=lambda key: mode_options[key],
+    # This is the crucial part: we bind the radio button directly to our app_mode state key.
+    key="app_mode",
+    # When the user selects a new mode, this callback will fire, resetting the state.
+    on_change=on_mode_change,
+    # Remove the label from the sidebar itself to save space
+    label_visibility="collapsed"
+)
+
+# ------------------ 3.4  Tabs ------------------
 
 tab_persona, tab_chat, tab_eval = st.tabs([
     "Persona Info",
-    config['tab2_label'], # MODIFIED
+    config['tab2_label'],
     "Session Evaluation",
 ])
 
 
 # TAB 1  ── Persona Info ----------------------------------------------
 with tab_persona:
-    if sel_persona_key == "__generate__":
+    if st.session_state.app_mode == "conflict_resolution":
+        if not sel_persona:
+             st.info("Select a conflict scenario from the sidebar.")
+        else:
+            st.subheader(f"Scenario: {sel_persona.get('scenario_title', 'N/A')}")
+            st.markdown(f"**Context:** {sel_persona.get('scenario_context', 'N/A')}")
+            st.markdown("---")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Teacher Persona")
+                teacher = sel_persona.get("teacher_persona", {})
+                st.markdown(f"**Name:** {teacher.get('name', 'N/A')}")
+                st.markdown(f"**Role:** {teacher.get('occupation', 'N/A')}")
+                st.markdown(f"**Background:** {teacher.get('background', 'N/A')}")
+                st.markdown(f"**Emotional State:** {teacher.get('emotional_state', 'N/A')}")
+            
+            with col2:
+                st.subheader("Parent Persona")
+                parent = sel_persona.get("parent_persona", {})
+                st.markdown(f"**Name:** {parent.get('name', 'N/A')}")
+                st.markdown(f"**Role:** {parent.get('occupation', 'N/A')}")
+                st.markdown(f"**Background:** {parent.get('background', 'N/A')}")
+                st.markdown(f"**Emotional State:** {parent.get('emotional_state', 'N/A')}")
+
+    elif sel_persona_key == "__generate__":
         if sel_persona is None:
             if st.button("Generate Persona"):
                 with st.spinner("Generating persona…"):
@@ -688,17 +801,28 @@ with tab_persona:
             st.markdown(f"- **Session Goal:** {sel_scenario.get('session_goal', '')}")
 
 # ---------------------------------------------------------------------------
-# Helper: render one message bubble (UNCHANGED logic, but will use dynamic sel_persona)
+# Helper: render one message bubble
 # ---------------------------------------------------------------------------
 def render_msg(node: MsgNode, mobile: bool = False):
     # ----- generic style helpers ------------------------------------------
-    role_label = (
-        f"Client ({sel_persona['name']})" if node.role == "assistant"
-        else "Trainee (You)"
-    )
-    align        = "flex-start" if node.role == "assistant" else "flex-end"
-    bubble_color = "#1b222a"     if node.role == "assistant" else "#0e2a47"
-    text_color   = "white"
+    if node.role == "assistant_teacher":
+        role_label = f"Teacher ({sel_persona['teacher_persona']['name']})"
+        bubble_color = "#2a1b22" # A slightly different color
+        align = "flex-start"
+    elif node.role == "assistant_parent":
+        role_label = f"Parent ({sel_persona['parent_persona']['name']})"
+        bubble_color = "#1b222a"
+        align = "flex-start"
+    elif node.role == "assistant": # Fallback for modes that are not conflict resolution
+        role_label = f"Client ({sel_persona.get('name', 'Unknown')})"
+        bubble_color = "#1b222a"
+        align = "flex-start"
+    else: # User
+        role_label = "Trainee (You)"
+        align = "flex-end"
+        bubble_color = "#0e2a47"
+
+    text_color = "white"
 
     # put most of the “large-screen tweakery” behind the mobile switch
     if mobile:
@@ -718,6 +842,11 @@ def render_msg(node: MsgNode, mobile: bool = False):
     # 1) “edit mode” for the trainee’s own message
     # ------------------------------------------------------------------
     if node.role == "user" and st.session_state.editing_msg_id == node.id:
+        if st.session_state.app_mode == "conflict_resolution":
+             st.warning("Editing messages is disabled in Conflict Resolution mode.")
+             st.session_state.editing_msg_id = None
+             st.rerun()
+
         new_text = st.text_area(
             "Edit your message:",
             value=st.session_state.editing_content or node.content,
@@ -804,10 +933,11 @@ def render_msg(node: MsgNode, mobile: bool = False):
                         st.rerun()
 
                     # ✏️ edit
-                    if st.button("✏️", key=f"edit_{node.id}"):
-                        st.session_state.editing_msg_id = node.id
-                        st.session_state.editing_content = node.content
-                        st.rerun()
+                    if st.session_state.app_mode != "conflict_resolution":
+                        if st.button("✏️", key=f"edit_{node.id}"):
+                            st.session_state.editing_msg_id = node.id
+                            st.session_state.editing_content = node.content
+                            st.rerun()
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -864,11 +994,12 @@ def render_msg(node: MsgNode, mobile: bool = False):
                 st.markdown(
                     f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP}; transform:{TRANSFORM};'>",
                     unsafe_allow_html=True)
-                if st.button("Edit Message", key=f"edit_{node.id}"):
-                    st.session_state.editing_msg_id = node.id
-                    st.session_state.editing_content = node.content
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+            if st.session_state.app_mode != "conflict_resolution":
+                    if st.button("Edit Message", key=f"edit_{node.id}"):
+                        st.session_state.editing_msg_id = node.id
+                        st.session_state.editing_content = node.content
+                        st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
             # Bubble
             with col_bubble:
@@ -899,10 +1030,11 @@ def render_msg(node: MsgNode, mobile: bool = False):
             st.markdown(
                 f"<div style='display:flex; align-items:center; margin-top:{OFFSET_TOP};'>",
                 unsafe_allow_html=True)
-            if st.button(edit_label, key=f"edit_{node.id}"):
-                st.session_state.editing_msg_id = node.id
-                st.session_state.editing_content = node.content
-                st.rerun()
+            if st.session_state.app_mode != "conflict_resolution":
+                if st.button(edit_label, key=f"edit_{node.id}"):
+                    st.session_state.editing_msg_id = node.id
+                    st.session_state.editing_content = node.content
+                    st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
         with bubble_col:
@@ -924,29 +1056,101 @@ def render_msg(node: MsgNode, mobile: bool = False):
     # ------------------------------------------------------------------
     # 3) Assistant (simulated client) bubble
     # ------------------------------------------------------------------
-    st.markdown(
-        f"""
-        <div style='display:flex; justify-content:{align}; margin:8px 0;'>
-          <div style='background-color:{bubble_color}; color:{text_color};
-                      padding:12px 16px; border-radius:18px;
-                      max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
-                      font-size:16px; line-height:1.5;'>
-            <strong>{role_label}:</strong><br>{markdown_to_html(node.content)}
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    if node.role.startswith("assistant"):
+        st.markdown(
+            f"""
+            <div style='display:flex; justify-content:{align}; margin:8px 0;'>
+              <div style='background-color:{bubble_color}; color:{text_color};
+                          padding:12px 16px; border-radius:18px;
+                          max-width:{BUBBLE_MAX}; box-shadow:1px 1px 6px rgba(0,0,0,0.2);
+                          font-size:16px; line-height:1.5;'>
+                <strong>{role_label}:</strong><br>{markdown_to_html(node.content)}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return
 
-
-# The rest of the script (chat tab, eval tab) uses the parameterized functions
-# and dynamically loaded config, so it should work as intended.
-# For clarity, the core logic is included below.
 
 # --------------- TAB 2: Chat Session ---------------
 with tab_chat:
     if sel_persona is None:
         st.info("Please generate or select a persona first in the *Persona Info* tab.")
+    
+    # --- CONFLICT RESOLUTION MODE LOGIC ---
+    elif st.session_state.app_mode == "conflict_resolution":
+        # 1. Render all existing messages
+        for node in conv_tree.path_to_leaf()[1:]:
+            render_msg(node, mobile=IS_MOBILE)
+
+        # 2. Get the current conversation path for the arbiter
+        current_path = conv_tree.path_to_leaf()
+        history_for_arbiter = [{"role": n.role, "content": n.content} for n in current_path[1:]]
+        last_speaker = history_for_arbiter[-1]['role'] if history_for_arbiter else "NONE"
+
+        # 3. Determine who should speak next if we don't already know
+        if 'next_speaker' not in st.session_state or st.session_state.next_speaker is None:
+            st.session_state.next_speaker = get_next_speaker(
+                API_KEY, 
+                history_for_arbiter, 
+                last_speaker, 
+                config['turn_arbiter_prompt']
+            )
+            st.rerun()
+
+        # 4. Handle AI turns
+        next_speaker = st.session_state.get('next_speaker')
+        if next_speaker in ["TEACHER", "PARENT"]:
+            persona_to_use = sel_persona['teacher_persona'] if next_speaker == "TEACHER" else sel_persona['parent_persona']
+            system_prompt_key = 'teacher_system_message_prompt' if next_speaker == "TEACHER" else 'parent_system_message_prompt'
+            role_for_tree = 'assistant_teacher' if next_speaker == "TEACHER" else 'assistant_parent'
+            
+            spinner_msg = f"{persona_to_use['name']} ({next_speaker.title()}) is responding..."
+            
+            with st.spinner(spinner_msg):
+                # We need a slightly modified get_ai_response call or structure
+                # Let's adapt the call here directly for clarity
+                system_msg = build_system_message(persona_to_use, None, config[system_prompt_key], config['system_message_details'])
+                
+                raw_msgs = build_prompt(conv_tree, system_msg)
+                gemini_system_instruction = raw_msgs[0]["content"]
+                history_for_gemini = [to_content("user" if m["role"] == "user" else "model", m["content"]) for m in raw_msgs[1:]]
+
+                # In this multi-agent setup, we don't have a pending user message. The AI is responding to the whole context.
+                # So we create a chat with the full history and ask it for a response.
+                chat = client.chats.create(
+                    model="gemini-2.5-flash",
+                    history=history_for_gemini,
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=gemini_system_instruction,
+                        temperature=0.7
+                    ),
+                )
+                response = chat.send_message("Based on the conversation so far, what is your response?") # Generic prompt to elicit a response
+
+                ai_reply = response.text
+
+            if ai_reply:
+                new_node_id = conv_tree.add_node(conv_tree.current_leaf_id, role_for_tree, ai_reply)
+                conv_tree.current_leaf_id = new_node_id
+
+            # Crucially, reset the speaker to trigger the arbiter again
+            st.session_state.next_speaker = None
+            st.rerun()
+
+        # 5. Handle Trainee's turn
+        elif next_speaker == "TRAINEE":
+            user_text = st.chat_input("Your turn to speak...")
+            if user_text:
+                new_user = conv_tree.add_node(conv_tree.current_leaf_id, "user", user_text)
+                conv_tree.current_leaf_id = new_user
+                
+                # Reset speaker to trigger the arbiter for the next turn
+                st.session_state.next_speaker = None
+                st.rerun()
+
+    # --- MODE LOGIC FOR OTHER MODES ---
     else:
         # Note: Your full render_msg function with version controls should be used here.
         # This is a simplified call for demonstration.
@@ -1028,10 +1232,22 @@ with tab_eval:
                     st.rerun()
 
             # ── Download full transcript (+eval +Q&A) ────────────────────────────
-            lines = [(("Client" if n.role == "assistant" else "Trainee") + ": " + n.content) for n in branch if n.role in {"user", "assistant"}]
-            if branch_key in st.session_state.evaluation_assistant_conversation:
-                lines.append("")  # Add a blank line before evaluation assistant messages
-                lines.extend([f"{'Evaluation Assistant' if m['role'] == 'assistant' else 'Trainee'}: {m['content']}" for m in st.session_state.evaluation_assistant_conversation[branch_key]])
+            lines = []
+            role_map = {
+                "user": "Trainee",
+                "assistant": "Client",
+                "assistant_teacher": "Teacher",
+                "assistant_parent": "Parent"
+            }
+            for n in branch:
+                if n.role in role_map:
+                    speaker = role_map[n.role]
+                    # For conflict mode, add the name
+                    if n.role == "assistant_teacher":
+                        speaker = f"Teacher ({sel_persona['teacher_persona']['name']})"
+                    elif n.role == "assistant_parent":
+                        speaker = f"Parent ({sel_persona['parent_persona']['name']})"
+                    lines.append(f"{speaker}: {n.content}")
             
             transcript = "\n\n".join(lines)
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
