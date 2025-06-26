@@ -549,10 +549,6 @@ config = APP_CONFIG[st.session_state.app_mode]
 # Set page config based on selected mode
 st.set_page_config(page_title=config['page_title'], layout="wide")
 
-# Dynamically set the evaluation prompt for this session
-EVALUATION_PROMPT = config['eval_prompt']
-
-
 st.markdown("""
 <style>
     /* remove the 2-rem gap everywhere */
@@ -562,6 +558,9 @@ st.markdown("""
     .stTabs{margin-top: 0rem;}
 </style>
 """, unsafe_allow_html=True)
+
+# Dynamically set the evaluation prompt for this session
+EVALUATION_PROMPT = config['eval_prompt']
 
 # --- Mobile / desktop switch ---
 SCREEN_W = streamlit_js_eval(js_expressions="screen.width", key="w")
@@ -595,7 +594,7 @@ def check_password():
         st.session_state.authenticated = False
 
     if not st.session_state.authenticated:
-        st.title("AI-Simulated Counselling/Counsultation Training for Psychologists")
+        st.title("AI-Simulated Counselling/Consultation Training for Psychologists")
         st.markdown(
             """
             **Hi, this is Leo, a psychology and cognitive neuroscience postgraduate with backgrounds in AI and education. Welcome to this training tool that I built!**
@@ -604,7 +603,7 @@ def check_password():
 
             **Key Features:**
             - Real-time conversations with AI-simulated clients experiencing diverse challenges.
-            - Four training modes: *Counselling*, *Parent Consultation*, *Teacher Consultation*, and *(Multi-Agent) Conflict Resolution*.
+            - Three training modes: *Counselling*, *Parent Consultation*, and *Teacher Consultation*.
             - Personalised interactive feedback from evaluation assistant AI.
             - Modify and edit messages to explore different conversation paths.
             - Dynamic generation of new personas and scenarios.<br><br>
@@ -633,6 +632,26 @@ def check_password():
         st.stop()
 
 check_password()
+
+# ---------- tweak side-margins ----------
+SIDE_PAD_REM = 3         # 1 rem ≈ the font-size; adjust to taste
+MAX_WIDTH_PX = 1400      # optional, keeps super-wide monitors tidy
+
+st.markdown(
+    f"""
+    <style>
+      /* the central column that holds every element */
+      .block-container {{
+          padding-top: 0rem !important;
+          padding-left:  {SIDE_PAD_REM}rem !important;
+          padding-right: {SIDE_PAD_REM}rem !important;
+          max-width: {MAX_WIDTH_PX}px !important;   /* remove this line if you don’t want a hard cap */
+          margin: 0 auto;                            /* centres the block */
+      }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ------------------ 3.2  Session‑state bootstrapping ------------------
 
