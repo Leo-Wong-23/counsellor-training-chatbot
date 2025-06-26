@@ -633,6 +633,8 @@ def check_password():
 
 check_password()
 
+st.set_page_config(initial_sidebar_state="expanded")
+
 # ---------- tweak side-margins ----------
 SIDE_PAD_REM = 3         # 1 rem ≈ the font-size; adjust to taste
 MAX_WIDTH_PX = 1400      # optional, keeps super-wide monitors tidy
